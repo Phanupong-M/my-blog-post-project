@@ -1,13 +1,11 @@
-import './App.css'
+import Navbar from './components/Navbar.jsx'; 
 
 function App() {
   return (
-    <>
-    <section>
-      <h1>My First React App on Vite</h1>
-    </section>
-    </>
-  )
+    <div>
+      <Navbar />
+    </div>
+  );
 }
 
-export default App
+export default App;
