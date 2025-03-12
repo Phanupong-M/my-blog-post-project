@@ -6,11 +6,11 @@ function HeroSection() {
     <main className="container px-4 py-8 mx-auto">
     <div className = "flex flex-col items-center md:flex-row md:gap-[60px]">
         <div className="mb-8">
-            <h1 className = "text-[40px] text-center mb-4">
+            <h1 className = "text-[40px] text-center font-bold mb-4">
                     TIME TO ADVENTURE
             </h1>
             <div>
-                Discover a World of Knowledge at Your Fingertips. Your Daily Dose of Inspiration and Information.
+                Explore the great outdoors, find new trails, and immerse yourself in the beauty of nature. Let each adventure inspire and refresh your spirit
             </div>
 
         </div>
@@ -21,13 +21,10 @@ function HeroSection() {
             <h2 className="text-xl font-semibold mb-2">-Author</h2>
             <h3 className="text-2xl font-bold mb-4">Phanupong M.</h3>
             <p className="text-gray-500 mb-4">
-                    I am a pet enthusiast and freelance writer who specializes in animal
-                    behavior and care. Width a deep love for cats, I enjoy sharing
-                    insights on feline companionship and wellness.
+                I'm an avid hiker and outdoor enthusiast, passionate about discovering new trails and sharing my experiences in the wilderness. I believe in the power of nature to refresh the soul and challenge the body
             </p>
             <p className="text-gray-500">
-                    When I&apos;m not writing, I spend time volunteering at my local
-                    animal shelter, helping cats find loving homes.
+                I love sharing my adventures and offering helpful tips to fellow explorers seeking their next outdoor journey.
             </p>
         </div>
         </div> 
