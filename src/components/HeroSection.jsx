@@ -15,7 +15,7 @@ function HeroSection() {
 
         </div>
 
-        <img src= {HeroImage} alt="Mountain" className="h-[470px] object-cover rounded-lg mb-8" />
+        <img src= {HeroImage} alt="Mountain" className="h-[470px] w-full object-cover rounded-lg mb-8" />
 
         <div>
             <h2 className="text-xl font-semibold mb-2">-Author</h2>
