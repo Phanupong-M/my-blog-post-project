@@ -5,7 +5,7 @@ import Footer from './components/Footer.jsx';
 
 function App() {
   return (
-    <div>
+    <div className='font-[Poppins]'>
       <Navbar />
       <HeroSection />
       <ArticleSection />
