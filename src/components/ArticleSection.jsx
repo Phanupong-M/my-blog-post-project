@@ -3,39 +3,50 @@ import {
     SelectContent,
     SelectGroup,
     SelectItem,
-    SelectLabel,
     SelectTrigger,
     SelectValue,
   } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Search } from 'lucide-react';
 import { blogPosts } from "@/data/blogPosts";
+import {useState} from 'react'
+
+const categories = ["Highlight", "Cat", "Inspiration", "General"];
 
 function ArticleSection () {
+
+  const [category, setCategory] = useState("Highlight")
+  const selectCategory = category === "Highlight" ? blogPosts : blogPosts.filter((data) => data.category === category)
+  console.log(category)
+  
     return(
         <section className="container mx-auto">
             <h1 className="font-bold text-[24px] py-[16px] px-[16px] md:pb-[32px] md:px-0 ">Latest articles</h1>
 
             <div className="md:flex md:justify-between md:items-center md:rounded-lg py-[16px] px-[24px] bg-[#EFEEEB]">
-                <ul class = "hidden md:flex text-[16px]">
-                    <li><a href="#" class="py-[12px] px-[20px] text-[#75716B] hover:bg-[#DAD6D1] hover:rounded-lg hover:text-black">Highlight</a></li>
-                    <li><a href="#" class="py-[12px] px-[20px] text-[#75716B] hover:bg-[#DAD6D1] hover:rounded-lg hover:text-black">Cat</a></li>
-                    <li><a href="#" class="py-[12px] px-[20px] text-[#75716B] hover:bg-[#DAD6D1] hover:rounded-lg hover:text-black">Inspiration</a></li>
-                    <li><a href="#" class="py-[12px] px-[20px] text-[#75716B] hover:bg-[#DAD6D1] hover:rounded-lg hover:text-black">Ganeral</a></li>
-                </ul>
-
+                <div className = "hidden md:flex text-[16px] gap-2">
+                  {categories.map((item) => (
+                      <button key = {item} onClick = {() => setCategory(item)} className={`
+                        py-[12px] px-[20px] text-[#75716B] cursor-pointer rounded-lg hover:bg-gray-100
+                        ${category === item
+                        ? "bg-[#DAD6D1] text-black " : ""
+                        }}`}
+                        
+                        disabled = {category === item} >{item}</button>
+                  ))}
+                </div>
                 <div className="relative">
                     <Input type="text" placeholder="Search" className="mb-[16px] md:mb-0 bg-white relative"/>
                     <Search strokeWidth={1} size={16} className="absolute top-[30%] right-[3%] cursor-pointer" />
                 </div>
                 <div className="md:hidden">
                     <h3 className="text-[16px] text-[#75716B] mb-[4px]">Category</h3>
-                    <SelectArticle />
+                    <SelectArticle  selectedCategory = {category} onCategoryChange = {setCategory}/>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 md:gap-x-[20px] px-4 md:px-0">
-                {blogPosts.map((post, index) => (
+                {selectCategory.map((post, index) => (
                   <BlogCard
                     key={index}
                     image={post.image}
@@ -47,36 +58,15 @@ function ArticleSection () {
             />
             ))}
           </div>
-           <h2 className="md:py-[100px] py-[50px] text-center underline font-bold">View more</h2>
+           <h2 className="md:py-[100px] py-[50px] text-center underline font-bold cursor-pointer">View more</h2>
         </section>
 )}
 export default ArticleSection
 
-
-function SelectArticle() {
-    return (
-      <Select>
-        <SelectTrigger className="w-full bg-white text-[#75716B]">
-          <SelectValue placeholder="Highlight" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            <SelectLabel>Highlight</SelectLabel>
-            <SelectItem value="Highlight">Highlight</SelectItem>
-            <SelectItem value="Cat">Cat</SelectItem>
-            <SelectItem value="Inspiration">Inspiration</SelectItem>
-            <SelectItem value="Ganeral">Ganeral</SelectItem>
-          </SelectGroup>
-        </SelectContent>
-      </Select>
-    )
-  }
-
-
   function BlogCard({image, category, title, description, author, date}) {
     return (
       <div className="flex flex-col gap-4 mt-12">
-        <a href="#" className="relative h-[212px] sm:h-[360px]">
+        <a href="#" className="relative h-60 md:h-112">
           <img className="w-full h-full object-cover rounded-md" src={image} alt={title}/>
         </a>
         <div className="flex flex-col">
@@ -101,6 +91,28 @@ function SelectArticle() {
       </div>
     );
    }
+
+
+function SelectArticle({selectedCategory, onCategoryChange}) {
+
+  // console.log("category:", selectedCategory); // ตรวจสอบค่า category
+  // console.log("setCategory:", onCategoryChange); // ตรวจสอบว่า setCategory เป็นฟังก์ชันหรือไม่
+
+  return (
+    <Select value={selectedCategory} onValueChange={(value) => onCategoryChange(value)}>
+      <SelectTrigger className="w-full bg-white text-[#75716B]">
+        <SelectValue placeholder="Highlight" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectGroup>
+            {categories.map((item) => ( 
+              <SelectItem value={item} key = {item}>{item}</SelectItem>
+            ))}
+        </SelectGroup>
+      </SelectContent>
+    </Select>
+  )
+}
 
 
  
