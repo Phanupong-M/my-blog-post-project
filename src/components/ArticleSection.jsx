@@ -8,16 +8,70 @@ import {
   } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Search } from 'lucide-react';
-import { blogPosts } from "@/data/blogPosts";
-import {useState} from 'react'
+import { format } from 'date-fns';
+//import { blogPosts } from "@/data/blogPosts";
+import {useEffect, useState} from 'react'
+import axios from "axios"
 
 const categories = ["Highlight", "Cat", "Inspiration", "General"];
 
 function ArticleSection () {
 
   const [category, setCategory] = useState("Highlight")
-  const selectCategory = category === "Highlight" ? blogPosts : blogPosts.filter((data) => data.category === category)
-  console.log(category)
+  const [blogPosts, setBlogPosts] = useState([])
+  const [loading, setLoading] = useState(false);
+
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+
+
+  const handleLoadMore = () => {
+    setPage((prevPage) => prevPage + 1);
+  };
+
+
+  const fetchPosts = async (selectedCategory) => {
+    setLoading(true)
+    try{
+      // การ Qurey https://blog-post-project-api.vercel.app/posts?category=cat 
+      const categoryParam =  category === "Highlight" ? "" : category;
+        
+      const response = await axios.get(
+        "https://blog-post-project-api.vercel.app/posts", {
+          params: {
+            page: page,
+            limit: 6,
+            category: categoryParam
+          }
+        }
+      )
+      console.log("check fetch")
+      console.log(response.data.posts)
+      console.log(page, " ", limit)
+
+      if (page === 1) {
+        setBlogPosts(response.data.posts);
+      } else {
+        setBlogPosts((prevPosts) => [...prevPosts, ...response.data.posts]);
+      }
+ 
+      if (response.data.currentPage >= response.data.totalPages) {
+        setHasMore(false);
+      }
+
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+    } finally {
+      setLoading(false); 
+    }
+  }
+
+  useEffect(() => {
+    fetchPosts(category)
+  },[category, page])
+
+  // console.log(blogPosts)
+  // const selectCategory = category === "Highlight" ? blogPosts : blogPosts.filter((data) => data.category === category)
   
     return(
         <section className="container mx-auto">
@@ -45,25 +99,43 @@ function ArticleSection () {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 md:gap-x-[20px] px-4 md:px-0">
-                {selectCategory.map((post, index) => (
-                  <BlogCard
-                    key={index}
-                    image={post.image}
-                    category={post.category}
-                    title={post.title}
-                    description={post.description}
-                    author={post.author}
-                    date={post.date}
-            />
-            ))}
-          </div>
-           <h2 className="md:py-[100px] py-[50px] text-center underline font-bold cursor-pointer">View more</h2>
+            {loading ? (
+                <p className="text-center py-8">Loading...</p>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 md:gap-x-[20px] px-4 md:px-0 mb-10">
+                  {blogPosts.map((post, index) => (
+                    <BlogCard
+                      key={index}
+                      image={post.image}
+                      category={post.category}
+                      title={post.title}
+                      description={post.description}
+                      author={post.author}
+                      date={post.date}
+                    />
+                  ))}
+                </div>
+              )}
+          {hasMore && (
+            <div className="text-center mb-10">
+              ฺ<button onClick = {handleLoadMore} 
+              className="hover:text-muted-foreground font-medium underline cursor-pointer">
+              View more
+              </button> 
+            </div>
+            )}
+          
         </section>
 )}
 export default ArticleSection
 
   function BlogCard({image, category, title, description, author, date}) {
+
+    const formatDate = (isoDate) => {
+      const date = new Date(isoDate);
+      return format(date, "dd MMMM yyyy");
+    };
+
     return (
       <div className="flex flex-col gap-4 mt-12">
         <a href="#" className="relative h-60 md:h-112">
@@ -85,7 +157,7 @@ export default ArticleSection
             <img className="w-8 h-8 rounded-full mr-2" src="https://res.cloudinary.com/dcbpjtd1r/image/upload/v1728449784/my-blog-post/xgfy0xnvyemkklcqodkg.jpg" alt={author} />
             <span>{author}</span>
             <span className="mx-2 text-gray-300">|</span>
-            <span>{date}</span>
+            <span>{formatDate(date)}</span>
           </div>
         </div>
       </div>
