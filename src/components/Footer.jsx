@@ -1,6 +1,9 @@
 import { Github, Linkedin } from 'lucide-react';
+import { useNavigate } from "react-router-dom";
+
 
 function Footer () {
+    const navigate = useNavigate();
     return(
         <footer className="bg-[#EFEEEB] flex md:flex-row md:justify-between md:px-[120px] flex-col items-center py-10 gap-6">
             <div className="flex flex-row gap-6">
@@ -19,7 +22,7 @@ function Footer () {
                 </div>
             </div>
 
-            <a href='#' className='underline font-bold text-base'>Home page</a>
+            <a href='#' onClick = {()=> navigate(`/`)} className='underline font-bold text-base'>Home page</a>
         </footer>
 
 )}
