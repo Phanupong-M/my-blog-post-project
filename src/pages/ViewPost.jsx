@@ -1,7 +1,6 @@
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer.jsx";
 import ReactMarkdown from "react-markdown";
-import { format } from "date-fns";
 import CopyLinkIcon from "../assets/icons/Copy.svg";
 import Smile from "../assets/icons/Smile.svg";
 import FacebookIcon from "../assets/icons/Facebook.svg";
@@ -22,6 +21,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import { formatDate } from "@/utils/dateUtils";
 
 function ViewPost() {
   const [post, setPost] = useState([]);
@@ -29,23 +30,20 @@ function ViewPost() {
   const [copyLink, setCopyLink] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
   const [showAlertDialog, setShowAlertDialog] = useState(false);
+  const [error, setError] = useState(null);
   const { postId } = useParams();
-
-  const formatDate = (isoDate) => {
-    const date = new Date(isoDate);
-    return format(date, "dd MMMM yyyy");
-  };
 
   const fetchPostsByCategory = async () => {
     setLoading(true);
+    setError(null);
     try {
       const response = await axios.get(
         `https://blog-post-project-api.vercel.app/posts/${postId}`
       );
       setPost(response.data);
-      // console.log(response.data)
     } catch (error) {
       console.error("Error fetching posts:", error);
+      setError("Failed to load the post. Please try again later.");
     } finally {
       setLoading(false);
     }
@@ -83,71 +81,114 @@ function ViewPost() {
     setShowAlertDialog(false);
   };
 
-  console.log(showAlertDialog)
+  const shareToSocialMedia = (platform) => {
+    const url = encodeURIComponent(window.location.href);
+    console.log(url);
+    let shareUrl = "";
+
+    switch (platform) {
+      case "facebook":
+        shareUrl = `https://www.facebook.com/share.php?u=${url}`;
+        break;
+      case "linkedin":
+        shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${url}`;
+        break;
+      case "twitter":
+        shareUrl = `https://www.twitter.com/share?&url=${url}`;
+        break;
+      default:
+        return;
+    }
+
+    window.open(shareUrl, "_blank");
+  };
 
   return (
     <>
       <Navbar />
       <section className="container mx-auto px-4 h-full">
-        <img
-          src={post.image}
-          alt="post.image"
-          className="h-[470px] w-full object-cover rounded-lg my-8"
-        />
-        <div className="flex flex-row gap-20">
-          <div className="flex flex-col">
-            <div className="flex items-center justify-start">
-              <span className="bg-green-200 rounded-full px-3 py-1 text-sm font-semibold text-green-600 mb-2">
-                {post.category}
-              </span>
-              <span className="text-gray-500 text-sm ml-2">{post.date}</span>
-            </div>
-
-            <h1 className="text-3xl font-bold text-gray-900 mt-8 mb-4">
-              {post.title}
-            </h1>
-            <p className="text-gray-700 mb-6 leading-relaxed">
-              {post.description}
-            </p>
-
-            <div className="markdown">
-              <ReactMarkdown
-                components={{
-                  h2: ({ children }) => <h2>{children}</h2>,
-                  p: ({ children }) => <p>{children}</p>,
-                }}
+        {loading ? (
+          <LoadingSpinner />
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
+              <h2 className="text-xl font-semibold text-red-800 mb-2">
+                Error Loading Post
+              </h2>
+              <p className="text-red-600 mb-4">{error}</p>
+              <button
+                onClick={fetchPostsByCategory}
+                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors cursor-pointer"
               >
-                {post.content}
-              </ReactMarkdown>
+                Try Again
+              </button>
             </div>
           </div>
+        ) : (
+          <>
+            <img
+              src={post.image}
+              alt="post.image"
+              className="h-[470px] w-full object-cover rounded-lg my-8"
+            />
+            <div className="flex flex-row gap-20">
+              <div className="flex flex-col">
+                <div className="flex items-center justify-start">
+                  <span className="bg-green-200 rounded-full px-3 py-1 text-sm font-semibold text-green-600 mb-2">
+                    {post.category}
+                  </span>
+                  <span className="text-gray-500 text-sm ml-2">
+                    {formatDate(post.date)}
+                  </span>
+                </div>
 
-          <div className="flex flex-col h-1/2 w-1/4 rounded-lg bg-[#EFEEEB] p-4 sticky top-10">
-            <div className="flex items-center">
-              <img
-                className="w-11 h-11 rounded-full mr-2"
-                src="https://res.cloudinary.com/dcbpjtd1r/image/upload/v1728449784/my-blog-post/xgfy0xnvyemkklcqodkg.jpg"
-                alt={post.author}
-              />
-              <div>
-                <div className="text-gray-500 text-sm">Author</div>
-                <div className="font-bold text-xl">{post.author}</div>
+                <h1 className="text-3xl font-bold text-gray-900 mt-8 mb-4">
+                  {post.title}
+                </h1>
+                <p className="text-gray-700 mb-6 leading-relaxed">
+                  {post.description}
+                </p>
+
+                <div className="markdown">
+                  <ReactMarkdown
+                    components={{
+                      h2: ({ children }) => <h2>{children}</h2>,
+                      p: ({ children }) => <p>{children}</p>,
+                    }}
+                  >
+                    {post.content}
+                  </ReactMarkdown>
+                </div>
+              </div>
+
+              <div className="flex flex-col h-1/2 w-1/4 rounded-lg bg-[#EFEEEB] p-4 sticky top-10">
+                <div className="flex items-center">
+                  <img
+                    className="w-11 h-11 rounded-full mr-2"
+                    src="https://res.cloudinary.com/dcbpjtd1r/image/upload/v1728449784/my-blog-post/xgfy0xnvyemkklcqodkg.jpg"
+                    alt={post.author}
+                  />
+                  <div>
+                    <div className="text-gray-500 text-sm">Author</div>
+                    <div className="font-bold text-xl">{post.author}</div>
+                  </div>
+                </div>
+                <hr className="my-3" />
+                <div className="text-gray-500">
+                  <p>
+                    Lorem ipsum dolor sit amet consectetur adipisicing elit.
+                    Quisquam, quos.
+                  </p>
+                  <br />
+                  <p>
+                    Lorem ipsum dolor sit amet consectetur adipisicing elit.
+                    Quisquam, quos.
+                  </p>
+                </div>
               </div>
             </div>
-            <hr className="my-3" />
-            <div className="text-gray-500">
-              <p>
-                Lorem ipsum dolor sit amet consectetur adipisicing elit.
-                Quisquam, quos.
-              </p>
-              <br />
-              <p>
-                Lorem ipsum dolor sit amet consectetur adipisicing elit.
-                Quisquam, quos.
-              </p>
-            </div>
-          </div>
-        </div>
+          </>
+        )}
         <section className="container mx-auto my-12">
           <div className="flex items-center mb-6 rounded-2xl bg-[#EFEEEB] p-4">
             <div
@@ -177,13 +218,20 @@ function ViewPost() {
                 src={FacebookIcon}
                 alt="Facebook"
                 className="cursor-pointer"
+                onClick={() => shareToSocialMedia("facebook")}
               />
               <img
                 src={LinkedInIcon}
                 alt="LinkedIn"
                 className="cursor-pointer"
+                onClick={() => shareToSocialMedia("linkedin")}
               />
-              <img src={TwitterIcon} alt="Twitter" className="cursor-pointer" />
+              <img
+                src={TwitterIcon}
+                alt="Twitter"
+                className="cursor-pointer"
+                onClick={() => shareToSocialMedia("twitter")}
+              />
             </div>
           </div>
 
@@ -196,7 +244,7 @@ function ViewPost() {
               ></textarea>
             </div>
             <div className="flex justify-end mt-2">
-              <button className="bg-gray-900 text-white px-6 py-2 rounded-full hover:bg-gray-800 transition">
+              <button className="bg-gray-900 text-white px-6 py-2 rounded-full hover:bg-gray-800 transition cursor-pointer">
                 Send
               </button>
             </div>
@@ -223,17 +271,16 @@ function ViewPost() {
           </div>
         )}
       </section>
-      <AlertDialogDemo showAlertDialog={showAlertDialog} setShowAlertDialog={setShowAlertDialog} />
+      <AlertDialogDemo
+        showAlertDialog={showAlertDialog}
+        setShowAlertDialog={setShowAlertDialog}
+      />
       <Footer />
     </>
   );
 }
 
 export default ViewPost;
-
-function CommentSection({ like, copyToClipboard }) {
-  return <></>;
-}
 
 export function AlertDialogDemo({ showAlertDialog, setShowAlertDialog }) {
   return (
@@ -273,6 +320,3 @@ export function AlertDialogDemo({ showAlertDialog, setShowAlertDialog }) {
     </AlertDialog>
   );
 }
-
-
-
