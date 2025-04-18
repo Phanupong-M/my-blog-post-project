@@ -13,9 +13,7 @@ import AdminCreatCategory  from './pages/Admin/AdminCreateCategory'
 import AdminNotification  from './pages/Admin/AdminNotification'
 import AdminProfile  from './pages/Admin/AdminProfile'
 import AdminResetPassword from './pages/Admin/AdminResetPassword'
-import SignUp from './pages/SignUp';
-import Login from './pages/Login';
-import MemberManagement from './pages/MemberManagement';
+
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 function App() {
