@@ -28,9 +28,9 @@ function App() {
         <Route path="/signup/success" element={<SignUpSuccess />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+          
         <Route path="/admin/article-management" element={<AdminArticaleManagement />} />
         <Route path="/admin/category-management" element={<AdminCategoryManagement />} />
-
         <Route path="/admin/article-create" element={<AdminCreatArticle />} />
         <Route path="/admin/category-create" element={<AdminCreatCategory />} />
         <Route path="/admin/notification" element={<AdminNotification />} />
