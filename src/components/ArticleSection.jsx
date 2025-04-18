@@ -9,9 +9,7 @@ import {
 
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-import { format } from "date-fns";
-//import { blogPosts } from "@/data/blogPosts";
-import { useEffect, useState } from "react";
+import { useEffect, useState} from "react";
 import axios from "axios";
 import {
   BrowserRouter as Router,
@@ -20,6 +18,8 @@ import {
   useParams,
   useNavigate,
 } from "react-router-dom";
+import LoadingSpinner from "./ui/LoadingSpinner";
+import { formatDate } from "@/utils/dateUtils";
 
 const categories = ["Highlight", "Cat", "Inspiration", "General"];
 
@@ -155,7 +155,7 @@ function ArticleSection() {
       </div>
 
       {loading ? (
-        <p className="text-center py-8">Loading...</p>
+        <LoadingSpinner />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 md:gap-x-[20px] px-4 md:px-0 mb-10 cursor-pointer">
           {blogPosts.map((post, index) => (
@@ -181,8 +181,10 @@ function ArticleSection() {
           >
             View more
           </button>
+            {/* <PaginationDemo /> */}
         </div>
       )}
+    
     </section>
   );
 }
@@ -191,11 +193,6 @@ export default ArticleSection;
 function BlogCard({ image, category, title, description, author, date, id }) {
   // const {postId} = useParams();
   const navigate = useNavigate();
-
-  const formatDate = (isoDate) => {
-    const date = new Date(isoDate);
-    return format(date, "dd MMMM yyyy");
-  };
 
   return (
     <div className="flex flex-col gap-4 mt-12">
