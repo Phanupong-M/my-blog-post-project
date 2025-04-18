@@ -1,8 +1,6 @@
 import Home from './pages/Home';
 import NotFound from './pages/NotFound';
 import ViewPost from './pages/ViewPost';
-<<<<<<< Updated upstream
-=======
 import SignUp from './pages/SignUp';
 import Login from './pages/Login';
 import Profile from './pages/Profile';
@@ -16,17 +14,8 @@ import AdminNotification  from './pages/Admin/AdminNotification'
 import AdminProfile  from './pages/Admin/AdminProfile'
 import AdminResetPassword from './pages/Admin/AdminResetPassword'
 
-
->>>>>>> Stashed changes
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-
-
-<<<<<<< Updated upstream
-=======
-
-
->>>>>>> Stashed changes
 function App() {
   return (
     <Router>
@@ -34,8 +23,6 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/post/:postId" element={<ViewPost />} />
         <Route path="*" element={<NotFound />} />
-<<<<<<< Updated upstream
-=======
         <Route path="/signup" element={<SignUp />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup/success" element={<SignUpSuccess />} />
@@ -49,7 +36,6 @@ function App() {
         <Route path="/admin/notification" element={<AdminNotification />} />
         <Route path="/admin/profile" element={<AdminProfile />} />
         <Route path="/admin/reset-password" element={<AdminResetPassword />} />
->>>>>>> Stashed changes
       </Routes>
     </Router>
   )
