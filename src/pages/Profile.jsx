@@ -9,6 +9,51 @@ import { toast } from "sonner";
 import axios from "axios";
 
 export default function ProfilePage() {
+  const navigate = useNavigate();
+
+  const [formData, setFormData] = useState({
+    image: "",
+    name: "",
+    username: "",
+    email: ""
+  });
+
+  const handleChange = (e) => {
+    const { id, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [id]: value,
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    toast.custom((t) => (
+      <div
+        className="bg-[#19B87A] text-white px-6 py-3 rounded-lg flex justify-between items-start w-full max-w-md"
+        style={{ minWidth: 400 }}
+      >
+        <div>
+          <h2 className="font-bold text-base mb-1">Saved profile</h2>
+          <p className="text-sm text-white/80">
+            Your profile has been successfully updated
+          </p>
+        </div>
+        <button
+          onClick={() => toast.dismiss(t)}
+          className="ml-4 text-white/80 hover:text-white transition"
+          aria-label="Close"
+        >
+          <X size={20} />
+        </button>
+      </div>
+    ));
+
+    // alert(JSON.stringify(formData));
+  }
+
+
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
@@ -27,8 +72,13 @@ export default function ProfilePage() {
               </AvatarFallback>
             </Avatar>
             <div className="ml-4">
-              <h1 className="text-2xl font-bold">{"Phanupong M."}</h1>
+              <h1 className="text-2xl font-bold">Phanupong M.</h1>
             </div>
+
+            <span className="mx-4 h-6 border-l border-gray-300" />
+
+            <h1 className="text-2xl font-bold">Profile</h1>
+            
           </div>
 
           {/* Mobile Header */}
@@ -57,7 +107,7 @@ export default function ProfilePage() {
                   <User className="h-8 w-8" />
                 </AvatarFallback>
               </Avatar>
-              <h2 className="ml-3 text-xl font-semibold">{"Phanupong M."}</h2>
+              <h2 className="ml-3 text-xl font-semibold">Panupong M.</h2>
             </div>
           </div>
 
@@ -105,7 +155,7 @@ export default function ProfilePage() {
                 </label>
               </div>
 
-              <form onSubmit={""} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label
                     htmlFor="name"
@@ -116,8 +166,8 @@ export default function ProfilePage() {
                   <Input
                     id="name"
                     name="name"
-                    value={""}
-                    onChange={""}
+                    value={formData.name}
+                    onChange={handleChange}
                     className="bg-white mt-1 py-3 rounded-sm placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-muted-foreground"
                   />
                 </div>
@@ -131,8 +181,8 @@ export default function ProfilePage() {
                   <Input
                     id="username"
                     name="username"
-                    value={""}
-                    onChange={""}
+                    value={formData.username}
+                    onChange={handleChange}
                     className="bg-white mt-1 py-3 rounded-sm placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-muted-foreground"
                   />
                 </div>
@@ -146,8 +196,9 @@ export default function ProfilePage() {
                   <Input
                     id="email"
                     name="email"
-                    type="email"
-                    value={""}
+                    type="text"
+                    value={formData.email}
+                    onChange={handleChange}
                     disabled
                     className="bg-white "
                   />
@@ -157,7 +208,7 @@ export default function ProfilePage() {
                   disabled={""}
                   className="px-8 py-2 mt-2 bg-foreground text-white rounded-full hover:bg-muted-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {"Save"}
+                  Save
                 </button>
               </form>
             </main>

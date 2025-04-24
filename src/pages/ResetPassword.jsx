@@ -17,6 +17,37 @@ import { toast } from "sonner";
 import axios from "axios";
 
 export default function ResetPassword() {
+
+  const navigate = useNavigate();
+  const [showAlertDialog, setShowAlertDialog] = useState(false);
+
+  const [formData, setFormData] = useState({
+    password: "",
+    newPassword: "",
+    confirmNewPassword: "",
+  });
+  const [valid, setValid] = useState({
+    password: true,
+    newPassword: true,
+    confirmNewPassword: true,
+  });
+
+  const handleChange = (e) => {
+    const { id, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [id]: value,
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setShowAlertDialog(true);
+    // alert(JSON.stringify(formData));
+  }
+
+
+
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
@@ -35,8 +66,13 @@ export default function ResetPassword() {
               </AvatarFallback>
             </Avatar>
             <div className="ml-4">
-              <h1 className="text-2xl font-bold">{""}</h1>
+              <h1 className="text-2xl font-bold">Phanupong M.</h1>
             </div>
+
+            <span className="mx-4 h-6 border-l border-gray-300" />
+
+            <h1 className="text-2xl font-bold">Reset password</h1>
+
           </div>
 
           {/* Mobile Header */}
@@ -65,7 +101,7 @@ export default function ResetPassword() {
                   <User />
                 </AvatarFallback>
               </Avatar>
-              <h2 className="ml-3 text-xl font-semibold">{"state.user.name"}</h2>
+              <h2 className="ml-3 text-xl font-semibold">Panupong M</h2>
             </div>
           </div>
 
@@ -91,53 +127,55 @@ export default function ResetPassword() {
 
             {/* Main Content */}
             <main className="flex-1 p-8 bg-[#EFEEEB] md:m-2 md:shadow-md md:rounded-lg">
-              <form onSubmit={""} className="space-y-7">
+              <form onSubmit={handleSubmit} className="space-y-7">
+
                 <div className="relative">
                   <label
-                    htmlFor="current-password"
+                    htmlFor="password"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
                     Current password
                   </label>
                   <Input
-                    id="current-password"
+                    id="password"
                     type="password"
                     placeholder="Current password"
-                    value={""}
-                    onChange={""}
-                    className={`mt-1 py-3 rounded-sm placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-muted-foreground`}
+                    value={formData.password}
+                    onChange={handleChange}
+                    className={`bg-white mt-1 py-3 rounded-sm placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-muted-foreground`}
                   />
                 </div>
+
                 <div className="relative">
                   <label
-                    htmlFor="new-password"
+                    htmlFor="newPassword"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
                     New password
                   </label>
                   <Input
-                    id="new-password"
+                    id="newPassword"
                     type="password"
                     placeholder="New password"
-                    value={""}
-                    onChange={""}
-                    className={`mt-1 py-3 rounded-sm placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-muted-foreground`}
+                    value={formData.newPassword}
+                    onChange={handleChange}
+                    className={`bg-white mt-1 py-3 rounded-sm placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-muted-foreground`}
                   />
                 </div>
                 <div className="relative">
                   <label
-                    htmlFor="confirm-new-password"
+                    htmlFor="confirmNewPassword"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
                     Confirm new password
                   </label>
                   <Input
-                    id="confirm-new-password"
+                    id="confirmNewPassword"
                     type="password"
                     placeholder="Confirm new password"
-                    value={""}
-                    onChange={""}
-                    className={`mt-1 py-3 rounded-sm placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-muted-foreground`}
+                    value={formData.confirmNewPassword}
+                    onChange={handleChange}
+                    className={`bg-white mt-1 py-3 rounded-sm placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-muted-foreground`}
                   />
                 </div>
                 <button
@@ -152,43 +190,43 @@ export default function ResetPassword() {
         </div>
       </div>
       <Footer />
-      {/* <ResetPasswordModal
-        dialogState={""}
-        setDialogState={""}
+      <ResetPasswordModal
+        dialogState={showAlertDialog}
+        setDialogState={setShowAlertDialog}
         resetFunction={""}
-      /> */}
+      />
     </div>
   );
 }
 
-// function ResetPasswordModal({ dialogState, setDialogState, resetFunction }) {
-//   return (
-//     <AlertDialog open={dialogState} onOpenChange={setDialogState}>
-//       <AlertDialogContent className="bg-white rounded-md pt-16 pb-6 max-w-[22rem] sm:max-w-md flex flex-col items-center">
-//         <AlertDialogTitle className="text-3xl font-semibold pb-2 text-center">
-//           Reset password
-//         </AlertDialogTitle>
-//         <AlertDialogDescription className="flex flex-row mb-2 justify-center font-medium text-center text-muted-foreground">
-//           Do you want to reset your password?
-//         </AlertDialogDescription>
-//         <div className="flex flex-row gap-4">
-//           <button
-//             onClick={() => setDialogState(false)}
-//             className="bg-background px-10 py-4 rounded-full text-foreground border border-foreground hover:border-muted-foreground hover:text-muted-foreground transition-colors"
-//           >
-//             Cancel
-//           </button>
-//           <button
-//             onClick={resetFunction}
-//             className="rounded-full text-white bg-foreground hover:bg-muted-foreground transition-colors py-4 text-lg px-10"
-//           >
-//             Reset
-//           </button>
-//         </div>
-//         <AlertDialogCancel className="absolute right-4 top-2 sm:top-4 p-1 border-none">
-//           <X className="h-6 w-6" />
-//         </AlertDialogCancel>
-//       </AlertDialogContent>
-//     </AlertDialog>
-//   );
-// }
+function ResetPasswordModal({ dialogState, setDialogState, resetFunction }) {
+  return (
+    <AlertDialog open={dialogState} onOpenChange={setDialogState}>
+      <AlertDialogContent className="bg-white rounded-md pt-16 pb-6 max-w-[22rem] sm:max-w-md flex flex-col items-center">
+        <AlertDialogTitle className="text-3xl font-semibold pb-2 text-center">
+          Reset password
+        </AlertDialogTitle>
+        <AlertDialogDescription className="flex flex-row mb-2 justify-center font-medium text-center text-muted-foreground">
+          Do you want to reset your password?
+        </AlertDialogDescription>
+        <div className="flex flex-row gap-4">
+          <button
+            onClick={() => setDialogState(false)}
+            className="bg-background px-10 py-4 rounded-full text-foreground border border-foreground hover:border-muted-foreground hover:text-muted-foreground transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={resetFunction}
+            className="rounded-full text-white bg-foreground hover:bg-muted-foreground transition-colors py-4 text-lg px-10"
+          >
+            Reset
+          </button>
+        </div>
+        <AlertDialogCancel className="absolute right-4 top-2 sm:top-4 p-1 border-none">
+          <X className="h-6 w-6" />
+        </AlertDialogCancel>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
