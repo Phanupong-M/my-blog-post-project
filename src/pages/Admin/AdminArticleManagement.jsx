@@ -11,11 +11,13 @@ import {
 import React, { useState } from 'react';
 import AdminNavbar from '@/components/AdminNavbar';
 import AdminSidebar from '@/components/AdminSidebar';
-import { Search, ChevronDown, Pencil, Trash2 } from 'lucide-react';
+import { Search, Pencil, Trash2,Plus} from 'lucide-react';
+import { useNavigate } from "react-router-dom";
 
 const AdminArticleManagement = () => {
   const [statusFilter, setStatusFilter] = useState('Status');
   const [categoryFilter, setCategoryFilter] = useState('Category');
+  const navigate = useNavigate();
 
   // Sample data - replace with your actual data
   const articles = [
@@ -48,25 +50,54 @@ const AdminArticleManagement = () => {
       title: "Unlocking Creativity: Simple Habits to Spark Inspiration Daily",
       category: "Inspiration",
       status: "Published"
-    }
+    },
+    {
+      title: "Understanding Cat Behavior: Why Your Feline Friend Acts the Way They Do",
+      category: "Cat",
+      status: "Published"
+    },
+    {
+      title: "The Fascinating World of Cats: Why We Love Our Furry Friends",
+      category: "Cat",
+      status: "Published"
+    },
+    {
+      title: "Finding Motivation: How to Stay Inspired Through Life's Challenges",
+      category: "General",
+      status: "Published"
+    },
+    {
+      title: "The Science of the Cat's Purr: How It Benefits Cats and Humans Alike",
+      category: "Cat",
+      status: "Published"
+    },
+
   ];
 
   return (
     <div className="flex h-screen bg-white">
       <AdminSidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <AdminNavbar title="Article management" buttonTitle="Create article" isPlus={true} />
-        
+        <AdminNavbar 
+          title="Article management" 
+          actions={<button 
+          className="flex items-center gap-2 px-10 py-2 bg-gray-900 text-white rounded-full hover:bg-gray-800 transition-colors cursor-pointer"
+          onClick={() => navigate("/admin/article-management/create")}
+          > 
+            <Plus size={20} />
+            <span>Create article</span>
+          </button>}
+        />
         <div className="px-14 pt-10">
 
           {/* Search and Filters */}
-          <div className="flex flex-row justify-between items-center gap-4 mb-6 ">
+          <div className="flex flex-row justify-between items-center gap-4 mb-6">
             <div className="flex relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
               <input
                 type="text"
                 placeholder="Search..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-400"
+                className="w-full pl-10 pr-4 py-1 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-400"
               />
             </div>
 
@@ -128,7 +159,7 @@ export default AdminArticleManagement;
 function SelectBar({title}) {
   return (
     <Select>
-      <SelectTrigger className="w-[200px] py-4">
+      <SelectTrigger className="w-[200px]">
         <SelectValue placeholder={title} />
       </SelectTrigger>
       <SelectContent>
