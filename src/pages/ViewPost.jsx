@@ -23,7 +23,7 @@ import { usePost } from "../contexts/PostContext";
 function ViewPost() {
   const [showAlertDialog, setShowAlertDialog] = useState(false);
   const { postId } = useParams();
-  const { post, loading, error, fetchPostById } = usePost()
+  const { post, loading, error, fetchPostById } = usePost();
 
   useEffect(() => {
     fetchPostById(postId);
@@ -94,7 +94,7 @@ function ViewPost() {
               alt="post.image"
               className="h-[470px] w-full object-cover rounded-lg my-8"
             />
-            <div className="flex flex-row gap-20">
+            <div className="flex flex-row justify-between items-start">
               <div className="flex flex-col">
                 <div className="flex items-center justify-start">
                   <span className="bg-green-200 rounded-full px-3 py-1 text-sm font-semibold text-green-600 mb-2">
@@ -121,6 +121,70 @@ function ViewPost() {
                   >
                     {post.content}
                   </ReactMarkdown>
+                </div>
+
+                <div className="container mx-auto my-12">
+                  <div className="flex items-center mb-6 rounded-2xl bg-[#EFEEEB] p-4">
+                    <div
+                      onClick={() => setShowAlertDialog(true)}
+                      className="flex items-center gap-1 bg-white rounded-full px-10 py-3 border border-gray-200 shadow-sm cursor-pointer"
+                    >
+                      <img src={Smile} alt="Facebook" className="" />
+                      <span>{post.likes}</span>
+                    </div>
+                    <div className="flex-grow"></div>
+                    <button
+                      className="mx-2 bg-white rounded-full px-4 py-2 border border-gray-200 shadow-sm flex items-center cursor-pointer"
+                      onClick={copyToClipboard}
+                    >
+                      <img
+                        src={CopyLinkIcon}
+                        alt="Copy link"
+                        className="w-5 h-5 mr-2"
+                      />
+                      Copy link
+                    </button>
+
+                    <div className="flex items-center gap-2">
+                      <img
+                        src={FacebookIcon}
+                        alt="Facebook"
+                        className="cursor-pointer"
+                        onClick={() => shareToSocialMedia("facebook")}
+                      />
+                      <img
+                        src={LinkedInIcon}
+                        alt="LinkedIn"
+                        className="cursor-pointer"
+                        onClick={() => shareToSocialMedia("linkedin")}
+                      />
+                      <img
+                        src={TwitterIcon}
+                        alt="Twitter"
+                        className="cursor-pointer"
+                        onClick={() => shareToSocialMedia("twitter")}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <h3 className="text-lg font-medium mb-1">Comment</h3>
+                    <div className="border border-gray-300 rounded-lg relative">
+                      <textarea
+                        placeholder="What are your thoughts?"
+                        className="w-full p-4 rounded-lg h-28 resize-none focus:outline-none"
+                      ></textarea>
+                    </div>
+                    <div className="flex justify-end mt-2">
+                      <button className="bg-gray-900 text-white px-6 py-2 rounded-full hover:bg-gray-800 transition cursor-pointer">
+                        Send
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <CommentList />
                 </div>
               </div>
 
@@ -152,69 +216,6 @@ function ViewPost() {
             </div>
           </>
         )}
-        <section className="container mx-auto my-12">
-          <div className="flex items-center mb-6 rounded-2xl bg-[#EFEEEB] p-4">
-            <div
-              onClick={() => setShowAlertDialog(true)}
-              className="flex items-center gap-1 bg-white rounded-full px-10 py-3 border border-gray-200 shadow-sm cursor-pointer"
-            >
-              <img src={Smile} alt="Facebook" className="" />
-              <span>{post.likes}</span>
-            </div>
-            <div className="flex-grow"></div>
-            <button
-              className="mx-2 bg-white rounded-full px-4 py-2 border border-gray-200 shadow-sm flex items-center cursor-pointer"
-              onClick={copyToClipboard}
-            >
-              <img
-                src={CopyLinkIcon}
-                alt="Copy link"
-                className="w-5 h-5 mr-2"
-              />
-              Copy link
-            </button>
-
-            <div className="flex items-center gap-2">
-              <img
-                src={FacebookIcon}
-                alt="Facebook"
-                className="cursor-pointer"
-                onClick={() => shareToSocialMedia("facebook")}
-              />
-              <img
-                src={LinkedInIcon}
-                alt="LinkedIn"
-                className="cursor-pointer"
-                onClick={() => shareToSocialMedia("linkedin")}
-              />
-              <img
-                src={TwitterIcon}
-                alt="Twitter"
-                className="cursor-pointer"
-                onClick={() => shareToSocialMedia("twitter")}
-              />
-            </div>
-          </div>
-
-          <div className="mt-4">
-            <h3 className="text-lg font-medium mb-1">Comment</h3>
-            <div className="border border-gray-300 rounded-lg relative">
-              <textarea
-                placeholder="What are your thoughts?"
-                className="w-full p-4 rounded-lg h-28 resize-none focus:outline-none"
-              ></textarea>
-            </div>
-            <div className="flex justify-end mt-2">
-              <button className="bg-gray-900 text-white px-6 py-2 rounded-full hover:bg-gray-800 transition cursor-pointer">
-                Send
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <CommentList />
-          </div>
-        </section>
       </section>
       <SignUpAlertDialog
         showAlertDialog={showAlertDialog}
