@@ -45,11 +45,13 @@ function ArticleSection() {
       const categoryParam =
         selectedCategory === "Highlight" ? "" : selectedCategory;
       const response = await axios.get(
-        "https://blog-post-project-api.vercel.app/posts",
+        "https://blog-post-api-lac.vercel.app/posts",
         {
           params: { page, limit: 6, category: categoryParam },
         }
       );
+
+      console.log(response.data.posts)
 
       setBlogPosts((prevPosts) =>
         page === 1
@@ -67,7 +69,7 @@ function ArticleSection() {
   const searchPosts = async () => {
     try {
       const response = await axios.get(
-        "https://blog-post-project-api.vercel.app/posts",
+        "https://blog-post-api-git-dev-phanupong-ms-projects.vercel.app/posts",
         {
           params: { keyword: debouncedValue },
         })
