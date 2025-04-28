@@ -13,9 +13,9 @@ export function PostProvider({ children }) {
     setError(null);
     try {
       const response = await axios.get(
-        `https://blog-post-project-api.vercel.app/posts/${postId}`
+        `https://blog-post-api-lac.vercel.app/posts/${postId}`
       );
-      setPost(response.data);
+      setPost(response.data.data);
     } catch (error) {
       setError("Failed to load the post. Please try again later.");
     } finally {
