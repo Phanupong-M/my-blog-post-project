@@ -27,7 +27,7 @@ jwtInterceptor();
 
 function App() {
   const { isAuthenticated, state } = useAuth();
-
+  // console.log(isAuthenticated,state)
   return (
     <>
       <Routes>
@@ -39,36 +39,21 @@ function App() {
         <Route
           path="/signup"
           element={
-            <AuthenticationRoute
-              isLoading={state.getUserLoading}
-              isAuthenticated={isAuthenticated}
-            >
               <SignUp />
-            </AuthenticationRoute>
           }
         />
 
         <Route
           path="/signup/success"
           element={
-            <AuthenticationRoute
-              isLoading={state.getUserLoading}
-              isAuthenticated={isAuthenticated}
-            >
               <SignUpSuccess />
-            </AuthenticationRoute>
           }
         />
 
         <Route
           path="/login"
           element={
-            <AuthenticationRoute
-              isLoading={state.getUserLoading}
-              isAuthenticated={isAuthenticated}
-            >
               <Login />
-            </AuthenticationRoute>
           }
         />
 

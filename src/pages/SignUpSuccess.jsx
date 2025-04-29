@@ -17,7 +17,7 @@ export default function SignUpSuccess() {
           </div>
           <h1 className="mt-6 text-2xl font-bold">Registration Successful</h1>
           <button
-            onClick={() => navigate("/login")}
+            onClick={() => navigate("/")}
             className="px-8 py-4 bg-foreground text-white rounded-full hover:bg-muted-foreground transition-colors cursor-pointer"
           >
             Continue

@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import Button from "../components/ui/CustomButton";
 import { z } from "zod";
+import { useAuth } from "../contexts/authentication"
 
 const usedEmails = [
   "test@example.com",
@@ -12,6 +13,7 @@ const usedEmails = [
 ];
 
 function SignUp() {
+  const { register, state } = useAuth();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -54,25 +56,57 @@ function SignUp() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     // 2. validate ด้วย zod
-    const result = signUpSchema.safeParse(formData);
+    const checkError = signUpSchema.safeParse(formData);
 
-    if (!result.success) {
+    if (!checkError.success) {
       // 3. แปลง error ของ zod เป็น object
       const fieldErrors = {};
-      result.error.errors.forEach((err) => {
-        fieldErrors[err.path[0]] = err.message;
+      checkError.error.errors.forEach((err) => {
+        fieldErrors[err.path[0]] = err.message
       });
       setErrors(fieldErrors);
-      return;
+      return
     }
 
+    const result = await register(formData)
+    if (result?.error) {
+      let suggestionMessage = "";
+
+      // Check for email or username-related issues
+      if (result.error.toLowerCase().includes("email")) {
+        suggestionMessage = "Try using a different email address.";
+      } else if (result.error.toLowerCase().includes("username")) {
+        suggestionMessage = "Try using a different username.";
+      }
+
+      return toast.custom((t) => (
+        <div className="bg-red-500 text-white p-4 rounded-sm flex justify-between items-start">
+          <div>
+            <h2 className="font-bold text-lg mb-1">{result.error}</h2>
+            <p className="text-sm">
+              {suggestionMessage && (
+                <span className="block mt-2 text-sm">
+                  {suggestionMessage}
+                </span>
+              )}
+            </p>
+          </div>
+          <button
+            onClick={() => toast.dismiss(t)}
+            className="text-white hover:text-gray-200"
+          >
+            <X size={20} />
+          </button>
+        </div>
+      ));
+    }
+    
     // ถ้าผ่าน validation
-    setErrors({});
-    alert("Sign up successful!");
+    setErrors({})
     // navigate("/somewhere"); // ถ้าต้องการ redirect
   };
 
