@@ -4,10 +4,12 @@ import Button from './ui/CustomButton';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserDropdown } from "./UserMenu";
+import { useAuth } from "../contexts/authentication";
 
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
-  const user = true; // mock user
+  const { isAuthenticated, state, logout } = useAuth();
+  const user = state.user;
   const navigate = useNavigate();
 
   const toggleMenu = () => {
