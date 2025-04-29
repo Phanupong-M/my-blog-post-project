@@ -69,7 +69,7 @@ function ArticleSection() {
   const searchPosts = async () => {
     try {
       const response = await axios.get(
-        "https://blog-post-api-git-dev-phanupong-ms-projects.vercel.app/posts",
+        "https://blog-post-api-lac.vercel.app/posts",
         {
           params: { keyword: debouncedValue },
         })
