@@ -29,13 +29,14 @@ function AuthProvider(props) {
     try {
       setState((prevState) => ({ ...prevState, getUserLoading: true }));
       const response = await axios.get(
-        "https://blog-post-project-api-with-db.vercel.app/auth/get-user"
+        "https://blog-post-api-lac.vercel.app/auth/get-user"
       );
       setState((prevState) => ({
         ...prevState,
         user: response.data,
         getUserLoading: false,
       }));
+      console.log(response)
     } catch (error) {
       setState((prevState) => ({
         ...prevState,
@@ -55,12 +56,12 @@ function AuthProvider(props) {
     try {
       setState((prevState) => ({ ...prevState, loading: true, error: null }));
       const response = await axios.post(
-        "https://blog-post-project-api-with-db.vercel.app/auth/login",
+        "https://blog-post-api-lac.vercel.app/auth/login",
         data
       );
       const token = response.data.access_token;
       localStorage.setItem("token", token);
-
+      console.log(token)
       // Fetch and set user details
       setState((prevState) => ({ ...prevState, loading: false, error: null }));
       navigate("/");
@@ -79,12 +80,13 @@ function AuthProvider(props) {
   const register = async (data) => {
     try {
       setState((prevState) => ({ ...prevState, loading: true, error: null }));
-      await axios.post(
-        "https://blog-post-project-api-with-db.vercel.app/auth/register",
+      const response = await axios.post(
+        "https://blog-post-api-lac.vercel.app/auth/register",
         data
       );
-      setState((prevState) => ({ ...prevState, loading: false, error: null }));
-      navigate("/sign-up/success");
+      const message = response.data?.message;
+      setState((prevState) => ({ ...prevState, loading: false, error: null, user: message, }));
+      navigate("/signup/success");
     } catch (error) {
       setState((prevState) => ({
         ...prevState,

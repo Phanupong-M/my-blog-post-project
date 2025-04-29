@@ -7,9 +7,11 @@ import { toast } from "sonner";
 import { X } from "lucide-react";
 import { z } from "zod";
 import { set } from "date-fns";
+import { useAuth } from "../contexts/authentication"
 
 function Login() {
   const navigate = useNavigate();
+  const { login, state } = useAuth();
 
   const [formData, setFormData] = useState({
     email: "",
@@ -24,11 +26,6 @@ function Login() {
     password: z.string().nonempty("Please enter your password"),
   });
 
-  const mockUser = {
-    email: "test@example.com",
-    password: "123456",
-  };
-
   const handleChange = (e) => {
     const { id, value } = e.target;
     setFormData((prev) => ({
@@ -42,13 +39,13 @@ function Login() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     let hasError = false;
 
-    const result = loginSchema.safeParse(formData);
+    const checkError = loginSchema.safeParse(formData);
 
-    if (!result.success) {
+    if (!checkError.success) {
       // 3. แปลง error ของ zod เป็น object
       const fieldErrors = {};
       result.error.errors.forEach((err) => {
@@ -58,48 +55,63 @@ function Login() {
       return;
     }
 
-    // เช็ค email/password ตรงกับ mockUser
-    if (
-      !hasError &&
-      (formData.email !== mockUser.email ||
-        formData.password !== mockUser.password)
-    ) {
-      setIsPasswordValid(true)
-      hasError = true;
+    // // เช็ค email/password ตรงกับ mockUser
+    // if (
+    //   !hasError &&
+    //   (formData.email !== mockUser.email ||
+    //     formData.password !== mockUser.password)
+    // ) {
+    //   setIsPasswordValid(true)
+    //   hasError = true;
 
-      toast.custom((t) => (
-        <div
-          className="bg-[#EB5769] text-white px-6 py-3 rounded-lg flex justify-between items-start w-full max-w-md"
-          style={{ minWidth: 500 }}
-        >
-          <div>
-            <h2 className="font-bold text-base mb-1">
-              Your password is incorrect or this email doesn’t exist
-            </h2>
-            <p className="text-sm text-white/80">
-              Please try another password or email
-            </p>
+    //   toast.custom((t) => (
+    //     <div
+    //       className="bg-[#EB5769] text-white px-6 py-3 rounded-lg flex justify-between items-start w-full max-w-md"
+    //       style={{ minWidth: 500 }}
+    //     >
+    //       <div>
+    //         <h2 className="font-bold text-base mb-1">
+    //           Your password is incorrect or this email doesn’t exist
+    //         </h2>
+    //         <p className="text-sm text-white/80">
+    //           Please try another password or email
+    //         </p>
+    //       </div>
+    //       <button
+    //         onClick={() => toast.dismiss(t)}
+    //         className="ml-4 text-white/80 hover:text-white transition"
+    //         aria-label="Close"
+    //       >
+    //         <X size={20} />
+    //       </button>
+    //     </div>
+    //   ));
+    // }
+
+
+    // if (!hasError) {
+
+      const result = await login(formData)
+      if (result?.error) {
+        return toast.custom((t) => (
+          <div className="bg-red-500 text-white p-4 rounded-sm flex justify-between items-start">
+            <div>
+              <h2 className="font-bold text-lg mb-1">{result.error}</h2>
+              <p className="text-sm">Please try another password or email</p>
+            </div>
+            <button
+              onClick={() => toast.dismiss(t)}
+              className="text-white hover:text-gray-200"
+            >
+              <X size={20} />
+            </button>
           </div>
-          <button
-            onClick={() => toast.dismiss(t)}
-            className="ml-4 text-white/80 hover:text-white transition"
-            aria-label="Close"
-          >
-            <X size={20} />
-          </button>
-        </div>
-      ));
-    }
+        ));
+      }
 
-
-    if (!hasError) {
-      
-      alert("Login successful!");
       setErrors({});
-      setIsPasswordValid(false);
 
       // navigate("/dashboard");
-    }
   };
 
   return (
