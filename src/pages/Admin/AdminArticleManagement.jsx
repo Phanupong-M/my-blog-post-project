@@ -8,71 +8,64 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-import React, { useState } from 'react';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+
+import React, { useState, useEffect } from 'react';
 import AdminNavbar from '@/components/AdminNavbar';
 import AdminSidebar from '@/components/AdminSidebar';
-import { Search, Pencil, Trash2,Plus} from 'lucide-react';
+import { Search, Pencil, Trash2, Plus } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
+import axios from 'axios';
 
 const AdminArticleManagement = () => {
   const [statusFilter, setStatusFilter] = useState('Status');
   const [categoryFilter, setCategoryFilter] = useState('Category');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [posts, setPosts] = useState([]);
+
   const navigate = useNavigate();
 
-  // Sample data - replace with your actual data
-  const articles = [
-    {
-      title: "Understanding Cat Behavior: Why Your Feline Friend Acts the Way They Do",
-      category: "Cat",
-      status: "Published"
-    },
-    {
-      title: "The Fascinating World of Cats: Why We Love Our Furry Friends",
-      category: "Cat",
-      status: "Published"
-    },
-    {
-      title: "Finding Motivation: How to Stay Inspired Through Life's Challenges",
-      category: "General",
-      status: "Published"
-    },
-    {
-      title: "The Science of the Cat's Purr: How It Benefits Cats and Humans Alike",
-      category: "Cat",
-      status: "Published"
-    },
-    {
-      title: "Top 10 Health Tips to Keep Your Cat Happy and Healthy",
-      category: "Cat",
-      status: "Published"
-    },
-    {
-      title: "Unlocking Creativity: Simple Habits to Spark Inspiration Daily",
-      category: "Inspiration",
-      status: "Published"
-    },
-    {
-      title: "Understanding Cat Behavior: Why Your Feline Friend Acts the Way They Do",
-      category: "Cat",
-      status: "Published"
-    },
-    {
-      title: "The Fascinating World of Cats: Why We Love Our Furry Friends",
-      category: "Cat",
-      status: "Published"
-    },
-    {
-      title: "Finding Motivation: How to Stay Inspired Through Life's Challenges",
-      category: "General",
-      status: "Published"
-    },
-    {
-      title: "The Science of the Cat's Purr: How It Benefits Cats and Humans Alike",
-      category: "Cat",
-      status: "Published"
-    },
+  useEffect(() => {
+    setIsLoading(true);
+    const fetchPosts = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:4001/posts/admin"
+        );
+        setPosts(response.data.posts);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  ];
+    fetchPosts();
+  }, []);
+
+  // Pagination logic
+  const totalPages = Math.ceil(posts.length / itemsPerPage);
+  const paginatedPosts = posts.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // ถ้าเปลี่ยน page แล้วไม่มีข้อมูล (เช่นลบโพสต์จนเหลือหน้าน้อยลง) ให้กลับไปหน้าแรก
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(1);
+    }
+  }, [totalPages, currentPage]);
 
   return (
     <div className="flex h-screen bg-white">
@@ -80,13 +73,15 @@ const AdminArticleManagement = () => {
       <div className="flex-1 flex flex-col overflow-hidden">
         <AdminNavbar 
           title="Article management" 
-          actions={<button 
-          className="flex items-center gap-2 px-10 py-2 bg-gray-900 text-white rounded-full hover:bg-gray-800 transition-colors cursor-pointer"
-          onClick={() => navigate("/admin/article-management/create")}
-          > 
-            <Plus size={20} />
-            <span>Create article</span>
-          </button>}
+          actions={
+            <button 
+              className="flex items-center gap-2 px-10 py-2 bg-gray-900 text-white rounded-full hover:bg-gray-800 transition-colors cursor-pointer"
+              onClick={() => navigate("/admin/article-management/create")}
+            > 
+              <Plus size={20} />
+              <span>Create article</span>
+            </button>
+          }
         />
         <div className="px-14 pt-10">
 
@@ -103,10 +98,10 @@ const AdminArticleManagement = () => {
 
             <div className='flex gap-4'>
               <div className="relative">
-                <SelectBar title = "Status"/>
+                <SelectBar title="Status" />
               </div>
               <div className="relative">
-                <SelectBar title = "Category"/>
+                <SelectBar title="Category" />
               </div>
             </div>
           </div>
@@ -123,30 +118,71 @@ const AdminArticleManagement = () => {
                 </tr>
               </thead>
               <tbody>
-                {articles.map((article, index) => (
-                  <tr key={index} className="border-b border-gray-200 last:border-b-0">
-                    <td className="py-4 px-6 text-sm">{article.title}</td>
-                    <td className="py-4 px-6 text-sm text-gray-600">{article.category}</td>
-                    <td className="py-4 px-6">
-                      <div className="flex items-center">
-                        <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
-                        <span className="text-sm text-green-500">Published</span>
-                      </div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="flex justify-center gap-2">
-                        <button className="p-1 hover:bg-gray-100 rounded">
-                          <Pencil size={18} className="text-gray-500" />
-                        </button>
-                        <button className="p-1 hover:bg-gray-100 rounded">
-                          <Trash2 size={18} className="text-gray-500" />
-                        </button>
-                      </div>
-                    </td>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={4} className="text-center py-8">Loading...</td>
                   </tr>
-                ))}
+                ) : paginatedPosts.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="text-center py-8">No articles found.</td>
+                  </tr>
+                ) : (
+                  paginatedPosts.map((post) => (
+                    <tr key={post.id} className="border-b border-gray-200 last:border-b-0">
+                      <td className="py-4 px-6 text-sm">{post.title}</td>
+                      <td className="py-4 px-6 text-sm text-gray-600">{post.category}</td>
+                      <td className="py-4 px-6">
+                        <div className="flex items-center">
+                          <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
+                          <span className="text-sm text-green-500">{post.status}</span>
+                        </div>
+                      </td>
+                      <td className="py-4 px-6">
+                        <div className="flex justify-center gap-2">
+                          <button className="p-1 hover:bg-gray-100 rounded">
+                            <Pencil size={18} className="text-gray-500" />
+                          </button>
+                          <button className="p-1 hover:bg-gray-100 rounded">
+                            <Trash2 size={18} className="text-gray-500" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-end p-4">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                        className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                      />
+                    </PaginationItem>
+                    {Array.from({ length: totalPages }, (_, i) => (
+                      <PaginationItem key={i + 1}>
+                        <PaginationLink
+                          isActive={currentPage === i + 1}
+                          onClick={() => setCurrentPage(i + 1)}
+                        >
+                          {i + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -156,7 +192,7 @@ const AdminArticleManagement = () => {
 
 export default AdminArticleManagement;
 
-function SelectBar({title}) {
+function SelectBar({ title }) {
   return (
     <Select>
       <SelectTrigger className="w-[200px]">
