@@ -7,6 +7,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { useEffect, useState} from "react";
@@ -33,10 +42,13 @@ function ArticleSection() {
 
 
   const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
+  const [totalPages, setTotalPages] = useState(1);
 
-  const handleLoadMore = () => {
-    setPage((prevPage) => prevPage + 1);
+  // Pagination handler
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setPage(newPage);
+    }
   };
 
   const fetchPostsByCategory = async (selectedCategory) => {
@@ -56,7 +68,7 @@ function ArticleSection() {
           ? response.data.posts
           : [...prevPosts, ...response.data.posts]
       );
-      setHasMore(response.data.currentPage < response.data.totalPages);
+      setTotalPages(response.data.totalPages);
     } catch (error) {
       console.error("Error fetching posts:", error);
     } finally {
@@ -72,7 +84,6 @@ function ArticleSection() {
           params: { keyword: debouncedValue },
         })
         setSearchResults(response.data.posts)
-        // console.log(response.data.posts)
     } catch {
       console.error("Error fetching posts:", error);
     }
@@ -96,9 +107,6 @@ function ArticleSection() {
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
   };
-
-  // console.log(blogPosts)
-  // const selectCategory = category === "Highlight" ? blogPosts : blogPosts.filter((data) => data.category === category)
 
   return (
     <section className="container mx-auto">
@@ -172,19 +180,39 @@ function ArticleSection() {
           ))}
         </div>
       )}
-      {hasMore && (
-        <div className="text-center mb-10">
-          ฺ
-          <button
-            onClick={handleLoadMore}
-            className="hover:text-muted-foreground font-medium underline cursor-pointer"
-          >
-            View more
-          </button>
-            {/* <PaginationDemo /> */}
+{/* Pagination */}
+{totalPages > 1 && (
+        <div className="flex justify-center mb-10">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => handlePageChange(page - 1)}
+                  className={page === 1 ? "pointer-events-none opacity-50" : ""}
+                />
+              </PaginationItem>
+              {Array.from({ length: totalPages }, (_, i) => (
+                <PaginationItem key={i + 1}>
+                  <PaginationLink
+                    isActive={page === i + 1}
+                    onClick={() => handlePageChange(i + 1)}
+                  >
+                    {i + 1}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => handlePageChange(page + 1)}
+                  className={
+                    page === totalPages ? "pointer-events-none opacity-50" : ""
+                  }
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         </div>
       )}
-    
     </section>
   );
 }
