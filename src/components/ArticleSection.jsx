@@ -51,8 +51,6 @@ function ArticleSection() {
         }
       );
 
-      console.log(response.data.posts)
-
       setBlogPosts((prevPosts) =>
         page === 1
           ? response.data.posts

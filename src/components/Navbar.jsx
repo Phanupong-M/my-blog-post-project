@@ -8,8 +8,7 @@ import { useAuth } from "../contexts/authentication";
 
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
-  const { isAuthenticated, state, logout } = useAuth();
-  const user = state.user;
+  const {isAuthenticated} = useAuth();
   const navigate = useNavigate();
 
   const toggleMenu = () => {
@@ -26,7 +25,7 @@ function Navbar() {
 
         {/* Desktop navigation */}
         <div className="hidden md:flex gap-2">
-          {user ? (
+          {isAuthenticated  ? (
             <UserDropdown />
           ) : (
             <>
@@ -44,7 +43,7 @@ function Navbar() {
           
           {/* Mobile menu */}
           <div className={`absolute left-0 right-0 top-[101%] w-full bg-white shadow-lg rounded-b-lg z-50 ${isOpen ? 'block' : 'hidden'}`}>
-            {user ? (
+            {isAuthenticated  ? (
               <UserDropdown />
             ) : (
               <div className="flex flex-col gap-3 p-4">

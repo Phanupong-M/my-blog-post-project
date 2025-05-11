@@ -6,10 +6,12 @@ import { X, User, Lock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
+import { useAuth } from "../contexts/authentication"
 import axios from "axios";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
+  const { state, fetchUser } = useAuth();
 
   const [formData, setFormData] = useState({
     image: "",
@@ -52,6 +54,37 @@ export default function ProfilePage() {
 
     // alert(JSON.stringify(formData));
   }
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        setFormData({
+          image: state.user.profilePic || "",
+          name: state.user.name || "",
+          username: state.user.username || "",
+          email: state.user.email || "",
+        });
+      } catch {
+        toast.custom((t) => (
+          <div className="bg-red-500 text-white p-4 rounded-sm flex justify-between items-start">
+            <div>
+              <h2 className="font-bold text-lg mb-1">
+                Failed to fetch profile
+              </h2>
+              <p className="text-sm">Please try again later.</p>
+            </div>
+            <button
+              onClick={() => toast.dismiss(t)}
+              className="text-white hover:text-gray-200"
+            >
+              <X size={20} />
+            </button>
+          </div>
+        ));
+      }
+    };
+
+    fetchProfile();
+  }, [state.user]);
 
 
   return (

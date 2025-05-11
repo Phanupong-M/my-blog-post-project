@@ -15,22 +15,57 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import axios from "axios";
+import { useAuth } from "../contexts/authentication"
 
 export default function ResetPassword() {
-
   const navigate = useNavigate();
   const [showAlertDialog, setShowAlertDialog] = useState(false);
+  const {logout} = useAuth();
 
   const [formData, setFormData] = useState({
     password: "",
     newPassword: "",
     confirmNewPassword: "",
   });
-  const [valid, setValid] = useState({
-    password: true,
-    newPassword: true,
-    confirmNewPassword: true,
+
+  const [errors, setErrors] = useState({
+    password: "",
+    newPassword: "",
+    confirmNewPassword: "",
   });
+
+  const validate = () => {
+    let valid = true;
+    let newErrors = {
+      password: "",
+      newPassword: "",
+      confirmNewPassword: "",
+    };
+
+    if (!formData.password.trim()) {
+      newErrors.password = "Please enter your current password";
+      valid = false;
+    }
+
+    if (!formData.newPassword.trim()) {
+      newErrors.newPassword = "Please enter a new password";
+      valid = false;
+    } else if (formData.newPassword.length < 8) {
+      newErrors.newPassword = "New password must be at least 8 characters";
+      valid = false;
+    }
+
+    if (!formData.confirmNewPassword.trim()) {
+      newErrors.confirmNewPassword = "Please confirm your new password";
+      valid = false;
+    } else if (formData.newPassword !== formData.confirmNewPassword) {
+      newErrors.confirmNewPassword = "Passwords do not match";
+      valid = false;
+    }
+
+    setErrors(newErrors);
+    return valid;
+  };
 
   const handleChange = (e) => {
     const { id, value } = e.target;
@@ -38,15 +73,82 @@ export default function ResetPassword() {
       ...prev,
       [id]: value,
     }));
+
+    // clear error เมื่อพิมพ์ใหม่
+    setErrors((prev) => ({
+      ...prev,
+      [id]: "",
+    }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setShowAlertDialog(true);
-    // alert(JSON.stringify(formData));
-  }
+    if (validate()) {
+       setShowAlertDialog(true);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    try {
+      setShowAlertDialog(false);
+      const response = await axios.put(
+        `https://blog-post-api-lac.vercel.app/auth/reset-password`,
+        {
+          oldPassword: formData.password,
+          newPassword: formData.newPassword,
+        }
+      );
+
+      if (response.status === 200) {
+        toast.custom((t) => (
+          <div className="bg-green-500 text-white p-4 rounded-sm flex justify-between items-start">
+            <div>
+              <h2 className="font-bold text-lg mb-1">Success!</h2>
+              <p className="text-sm">
+                Password reset successful. You can now log in with your new
+                password.
+              </p>
+            </div>
+            <button
+              onClick={() => toast.dismiss(t)}
+              className="text-white hover:text-gray-200"
+            >
+              <X size={20} />
+            </button>
+          </div>
+        ));
+
+        // Clear form fields after successful reset
+        setFormData({
+          password: "",
+          newPassword: "",
+          confirmNewPassword: "",
+        });
+
+        logout()
+      }
 
 
+    } catch (error) {
+      toast.custom((t) => (
+        <div className="bg-red-500 text-white p-4 rounded-sm flex justify-between items-start">
+          <div>
+            <h2 className="font-bold text-lg mb-1">Error</h2>
+            <p className="text-sm">
+              {error.response?.data?.error ||
+                "Something went wrong. Please try again."}
+            </p>
+          </div>
+          <button
+            onClick={() => toast.dismiss(t)}
+            className="text-white hover:text-gray-200"
+          >
+            <X size={20} />
+          </button>
+        </div>
+      ));
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -56,11 +158,7 @@ export default function ResetPassword() {
           {/* Desktop Header */}
           <div className="hidden md:flex items-center p-6">
             <Avatar className="h-14 w-14">
-              <AvatarImage
-                src={""}
-                alt="Profile"
-                className="object-cover"
-              />
+              <AvatarImage src={""} alt="Profile" className="object-cover" />
               <AvatarFallback>
                 <User />
               </AvatarFallback>
@@ -72,7 +170,6 @@ export default function ResetPassword() {
             <span className="mx-4 h-6 border-l border-gray-300" />
 
             <h1 className="text-2xl font-bold">Reset password</h1>
-
           </div>
 
           {/* Mobile Header */}
@@ -92,11 +189,7 @@ export default function ResetPassword() {
             </div>
             <div className="flex items-center">
               <Avatar className="h-10 w-10">
-                <AvatarImage
-                  src={""}
-                  alt="Profile"
-                  className="object-cover"
-                />
+                <AvatarImage src={""} alt="Profile" className="object-cover" />
                 <AvatarFallback>
                   <User />
                 </AvatarFallback>
@@ -128,7 +221,6 @@ export default function ResetPassword() {
             {/* Main Content */}
             <main className="flex-1 p-8 bg-[#EFEEEB] md:m-2 md:shadow-md md:rounded-lg">
               <form onSubmit={handleSubmit} className="space-y-7">
-
                 <div className="relative">
                   <label
                     htmlFor="password"
@@ -142,8 +234,15 @@ export default function ResetPassword() {
                     placeholder="Current password"
                     value={formData.password}
                     onChange={handleChange}
-                    className={`bg-white mt-1 py-3 rounded-sm placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-muted-foreground`}
+                    className={`bg-white mt-1 py-3 rounded-sm placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-muted-foreground ${
+                      errors.password ? "border-red-500" : ""
+                    }`}
                   />
+                  {errors.password && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.password}
+                    </p>
+                  )}
                 </div>
 
                 <div className="relative">
@@ -159,8 +258,15 @@ export default function ResetPassword() {
                     placeholder="New password"
                     value={formData.newPassword}
                     onChange={handleChange}
-                    className={`bg-white mt-1 py-3 rounded-sm placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-muted-foreground`}
+                    className={`bg-white mt-1 py-3 rounded-sm placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-muted-foreground ${
+                      errors.newPassword ? "border-red-500" : ""
+                    }`}
                   />
+                  {errors.newPassword && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.newPassword}
+                    </p>
+                  )}
                 </div>
                 <div className="relative">
                   <label
@@ -175,8 +281,15 @@ export default function ResetPassword() {
                     placeholder="Confirm new password"
                     value={formData.confirmNewPassword}
                     onChange={handleChange}
-                    className={`bg-white mt-1 py-3 rounded-sm placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-muted-foreground`}
+                    className={`bg-white mt-1 py-3 rounded-sm placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-muted-foreground ${
+                      errors.confirmNewPassword ? "border-red-500" : ""
+                    }`}
                   />
+                  {errors.confirmNewPassword && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.confirmNewPassword}
+                    </p>
+                  )}
                 </div>
                 <button
                   type="submit"
@@ -193,7 +306,7 @@ export default function ResetPassword() {
       <ResetPasswordModal
         dialogState={showAlertDialog}
         setDialogState={setShowAlertDialog}
-        resetFunction={""}
+        resetFunction={handleResetPassword}
       />
     </div>
   );

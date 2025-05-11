@@ -15,19 +15,22 @@ import AdminProfile from "./pages/Admin/AdminProfile";
 import AdminResetPassword from "./pages/Admin/AdminResetPassword";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-
 import { useAuth } from "./contexts/authentication.jsx";
 import jwtInterceptor from "./utils/jwtInterceptor.js";
 import AuthenticationRoute from "./components/auth/AuthenticationRoute";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
-
-
+import { LoadingScreen } from "./components/LoadingScreen";
 
 jwtInterceptor();
 
 function App() {
   const { isAuthenticated, state } = useAuth();
-  // console.log(isAuthenticated,state)
+  const role = state.user?.role;
+  // Don't render routes until we know the authentication state
+  // if (state.getUserLoading) {
+  //   return <LoadingScreen />;
+  // }
+
   return (
     <>
       <Routes>
@@ -39,52 +42,45 @@ function App() {
         <Route
           path="/signup"
           element={
+            <AuthenticationRoute
+              // isLoading={state.getUserLoading}
+              isAuthenticated={isAuthenticated}
+            >
               <SignUp />
+            // </AuthenticationRoute>
           }
         />
 
-        <Route
-          path="/signup/success"
-          element={
-              <SignUpSuccess />
-          }
-        />
+        <Route path="/signup/success" element={<SignUpSuccess />} />
 
         <Route
           path="/login"
           element={
+            <AuthenticationRoute
+              isLoading={state.getUserLoading}
+              isAuthenticated={isAuthenticated}
+              userRole={role}
+            >
               <Login />
+            </AuthenticationRoute>
           }
         />
 
         {/* User Section */}
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute
-              isLoading={state.getUserLoading}
-              isAuthenticated={isAuthenticated}
-              userRole={state.user?.role}
-              requiredRole="user"
-            >
-              <Profile />
-            </ProtectedRoute>
-          }
-        />
+        <Route 
+        path="/profile" 
+        element={
+          <ProtectedRoute
+          isLoading={state.getUserLoading}
+          isAuthenticated={isAuthenticated}
+          userRole={role}
+        >
+          <Profile />
+        </ProtectedRoute>
+        
+        } />
 
-        <Route
-          path="/reset-password"
-          element={
-            <ProtectedRoute
-              isLoading={state.getUserLoading}
-              isAuthenticated={isAuthenticated}
-              userRole={state.user?.role}
-              requiredRole="user"
-            >
-              <ResetPassword />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* Admin Section */}
         <Route

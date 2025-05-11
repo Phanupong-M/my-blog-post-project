@@ -2,7 +2,7 @@
 import { Navigate } from "react-router-dom";
 import { LoadingScreen } from "../LoadingScreen";
 
-function AuthenticationRoute({ isLoading, isAuthenticated, children }) {
+function AuthenticationRoute({ isLoading, isAuthenticated, userRole, children }) {
   if (isLoading === null || isLoading) {
     // Loading state or no data yet
     return (
@@ -13,12 +13,14 @@ function AuthenticationRoute({ isLoading, isAuthenticated, children }) {
       </div>
     );
   }
+  if (userRole === "admin") {
+    return <Navigate to="/admin/article-management" replace />;
+  }
 
   if (isAuthenticated) {
     // Return null while navigate performs the redirection
     return <Navigate to="/" replace />;
   }
-
   // User is authenticated and has the correct role
   return children;
 }
