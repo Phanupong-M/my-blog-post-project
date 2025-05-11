@@ -10,16 +10,13 @@ import { set } from "date-fns";
 import { useAuth } from "../contexts/authentication"
 
 function Login() {
-  const navigate = useNavigate();
-  const { login, state } = useAuth();
+  const {login} = useAuth();
 
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
-
   const [errors, setErrors] = useState({});
-  const [isPasswordValid, setIsPasswordValid] = useState(false)
 
   const loginSchema = z.object({
     email: z.string().min(1, "Please enter your email").email("Please enter a valid email"),
@@ -41,57 +38,19 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    let hasError = false;
 
     const checkError = loginSchema.safeParse(formData);
-
     if (!checkError.success) {
-      // 3. แปลง error ของ zod เป็น object
       const fieldErrors = {};
-      result.error.errors.forEach((err) => {
+      checkError.error.errors.forEach((err) => {
         fieldErrors[err.path[0]] = err.message;
       });
       setErrors(fieldErrors);
       return;
     }
 
-    // // เช็ค email/password ตรงกับ mockUser
-    // if (
-    //   !hasError &&
-    //   (formData.email !== mockUser.email ||
-    //     formData.password !== mockUser.password)
-    // ) {
-    //   setIsPasswordValid(true)
-    //   hasError = true;
-
-    //   toast.custom((t) => (
-    //     <div
-    //       className="bg-[#EB5769] text-white px-6 py-3 rounded-lg flex justify-between items-start w-full max-w-md"
-    //       style={{ minWidth: 500 }}
-    //     >
-    //       <div>
-    //         <h2 className="font-bold text-base mb-1">
-    //           Your password is incorrect or this email doesn’t exist
-    //         </h2>
-    //         <p className="text-sm text-white/80">
-    //           Please try another password or email
-    //         </p>
-    //       </div>
-    //       <button
-    //         onClick={() => toast.dismiss(t)}
-    //         className="ml-4 text-white/80 hover:text-white transition"
-    //         aria-label="Close"
-    //       >
-    //         <X size={20} />
-    //       </button>
-    //     </div>
-    //   ));
-    // }
-
-
-    // if (!hasError) {
-
       const result = await login(formData)
+
       if (result?.error) {
         return toast.custom((t) => (
           <div className="bg-red-500 text-white p-4 rounded-sm flex justify-between items-start">
@@ -110,9 +69,10 @@ function Login() {
       }
 
       setErrors({});
-
-      // navigate("/dashboard");
+      formData({email: "", password: ""});
   };
+
+
 
   return (
     <>
@@ -133,7 +93,7 @@ function Login() {
                   value={formData.email}
                   onChange={handleChange}
                   className={`bg-white ${
-                    isPasswordValid
+                    errors.email
                       ? "border border-red-500 rounded-lg"
                       : ""
                   }`}
@@ -156,7 +116,7 @@ function Login() {
                   value={formData.password}
                   onChange={handleChange}
                   className={`bg-white ${
-                    isPasswordValid
+                    errors.password
                       ? "border border-red-500 rounded-lg"
                       : ""
                   }`}

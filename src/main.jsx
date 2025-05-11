@@ -8,7 +8,6 @@ import { AuthProvider } from "./contexts/authentication.jsx";
 import { PostProvider } from "./contexts/PostContext";
 
 createRoot(document.getElementById("root")).render(
-  <StrictMode>
     <BrowserRouter>
       <PostProvider>
         <AuthProvider>
@@ -17,5 +16,4 @@ createRoot(document.getElementById("root")).render(
         </AuthProvider>
       </PostProvider>
     </BrowserRouter>
-  </StrictMode>
 );

@@ -8,9 +8,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/authentication";
 
 export function UserDropdown() {
-  const navigate = useNavigate()
+  const {state, logout } = useAuth();
+  const navigate = useNavigate();
 
   const handleManageAccount = () => {
     navigate("/profile");
@@ -32,10 +34,16 @@ export function UserDropdown() {
               <div className="flex items-center cursor-pointer">
                 <Avatar className="w-8 h-8">
                   <AvatarImage src="/your-avatar.jpg" alt="User avatar" />
-                  <AvatarFallback>M</AvatarFallback>
+                  <AvatarFallback>
+                    {state.user.profilePic
+                      ? ""
+                      : state.user.name
+                      ? state.user.name.charAt(0).toUpperCase()
+                      : ""}
+                  </AvatarFallback>
                 </Avatar>
                 <span className="ml-2 font-medium text-gray-700">
-                  Moodeng ja
+                  {state.user.name}
                 </span>
                 <ChevronDown className="ml-1" />
               </div>
@@ -46,14 +54,20 @@ export function UserDropdown() {
               className="w-48 py-1 rounded-md shadow-md"
             >
               <div className="px-4 py-2">
-                <div className="flex items-center">
+                <div
+                  className="flex items-center cursor-pointer"
+                  onClick={handleManageAccount}
+                >
                   <User className="w-5 h-5 mr-3 text-gray-500" />
                   <span>Profile</span>
                 </div>
               </div>
 
               <div className="px-4 py-2">
-                <div className="flex items-center">
+                <div
+                  className="flex items-center cursor-pointer"
+                  onClick={handleResetPassword}
+                >
                   <KeyRound className="w-5 h-5 mr-3 text-gray-500" />
                   <span>Reset password</span>
                 </div>
@@ -62,7 +76,12 @@ export function UserDropdown() {
               <div className="border-t my-1"></div>
 
               <div className="px-4 py-2">
-                <div className="flex items-center">
+                <div
+                  className="flex items-center cursor-pointer"
+                  onClick={() => {
+                    logout();
+                  }}
+                >
                   <LogOut className="w-5 h-5 mr-3 text-gray-500" />
                   <span>Log out</span>
                 </div>

@@ -4,13 +4,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import Button from "../components/ui/CustomButton";
 import { z } from "zod";
-import { useAuth } from "../contexts/authentication"
+import { useAuth } from "../contexts/authentication";
+import { toast } from "sonner";
+import { X } from "lucide-react";
 
-const usedEmails = [
-  "test@example.com",
-  "hello@world.com",
-  "user@email.com",
-];
+const usedEmails = ["test@example.com", "hello@world.com", "user@email.com"];
 
 function SignUp() {
   const { register, state } = useAuth();
@@ -31,13 +29,10 @@ function SignUp() {
       .string()
       .min(1, "Please enter your email")
       .email("Please enter a valid email")
-      .refine(
-        (email) => !usedEmails.includes(email.trim().toLowerCase()),
-        { message: "Email is already taken, please try another email." }
-      ),
-    password: z
-      .string()
-      .min(6, "Password must be at least 6 characters."),
+      .refine((email) => !usedEmails.includes(email.trim().toLowerCase()), {
+        message: "Email is already taken, please try another email.",
+      }),
+    password: z.string().min(6, "Password must be at least 6 characters."),
   });
 
   const [errors, setErrors] = useState({});
@@ -59,20 +54,18 @@ function SignUp() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // 2. validate ด้วย zod
     const checkError = signUpSchema.safeParse(formData);
 
     if (!checkError.success) {
-      // 3. แปลง error ของ zod เป็น object
       const fieldErrors = {};
       checkError.error.errors.forEach((err) => {
-        fieldErrors[err.path[0]] = err.message
+        fieldErrors[err.path[0]] = err.message;
       });
       setErrors(fieldErrors);
-      return
+      return;
     }
 
-    const result = await register(formData)
+    const result = await register(formData);
     if (result?.error) {
       let suggestionMessage = "";
 
@@ -89,9 +82,7 @@ function SignUp() {
             <h2 className="font-bold text-lg mb-1">{result.error}</h2>
             <p className="text-sm">
               {suggestionMessage && (
-                <span className="block mt-2 text-sm">
-                  {suggestionMessage}
-                </span>
+                <span className="block mt-2 text-sm">{suggestionMessage}</span>
               )}
             </p>
           </div>
@@ -104,9 +95,9 @@ function SignUp() {
         </div>
       ));
     }
-    
+
     // ถ้าผ่าน validation
-    setErrors({})
+    setErrors({});
     // navigate("/somewhere"); // ถ้าต้องการ redirect
   };
 
@@ -128,6 +119,7 @@ function SignUp() {
                   placeholder="Full name"
                   value={formData.name}
                   onChange={handleChange}
+                  disabled={state.getUserLoading}
                   className={`bg-white ${
                     errors.name ? "border border-red-500 rounded-lg" : ""
                   }`}
@@ -149,6 +141,7 @@ function SignUp() {
                   placeholder="Username"
                   value={formData.username}
                   onChange={handleChange}
+                  disabled={state.getUserLoading}
                   className={`bg-white ${
                     errors.username ? "border border-red-500 rounded-lg" : ""
                   }`}
@@ -170,8 +163,11 @@ function SignUp() {
                   placeholder="Email"
                   value={formData.email}
                   onChange={handleChange}
+                  disabled={state.getUserLoading}
                   className={`bg-white ${
-                    errors.email ? "border border-red-500 rounded-lg text-red-500" : ""
+                    errors.email
+                      ? "border border-red-500 rounded-lg text-red-500"
+                      : ""
                   }`}
                 />
                 {errors.email && (
@@ -191,8 +187,11 @@ function SignUp() {
                   placeholder="Password"
                   value={formData.password}
                   onChange={handleChange}
+                  disabled={state.getUserLoading}
                   className={`bg-white ${
-                    errors.password ? "border border-red-500 rounded-lg text-red-500" : ""
+                    errors.password
+                      ? "border border-red-500 rounded-lg text-red-500"
+                      : ""
                   }`}
                 />
                 {errors.password && (
@@ -204,7 +203,20 @@ function SignUp() {
             </div>
 
             <div className="flex justify-center items-center mt-5">
-              <Button text="Sign up" isPrimary={true} />
+              <Button
+                text={
+                  state.getUserLoading ? (
+                    <>
+                      <span className="animate-spin mr-2">⏳</span> Signing
+                      up...
+                    </>
+                  ) : (
+                    "Sign up"
+                  )
+                }
+                isPrimary={true}
+                disabled={state.getUserLoading}
+              />
             </div>
 
             <div className="flex justify-center items-center gap-1 mt-2">

@@ -54,22 +54,20 @@ function AuthProvider(props) {
   // Login user
   const login = async (data) => {
     try {
-      setState((prevState) => ({ ...prevState, loading: true, error: null }));
+      setState((prevState) => ({ ...prevState, getUserLoading: true, error: null }));
       const response = await axios.post(
         "https://blog-post-api-lac.vercel.app/auth/login",
         data
       );
       const token = response.data.access_token;
       localStorage.setItem("token", token);
-      console.log(token)
       // Fetch and set user details
-      setState((prevState) => ({ ...prevState, loading: false, error: null }));
-      navigate("/");
+      //setState((prevState) => ({ ...prevState, getUserLoading: false, error: null }));
       await fetchUser();
     } catch (error) {
       setState((prevState) => ({
         ...prevState,
-        loading: false,
+        getUserLoading: false,
         error: error.response?.data?.error || "Login failed",
       }));
       return { error: error.response?.data?.error || "Login failed" };
@@ -79,18 +77,18 @@ function AuthProvider(props) {
   // Register user
   const register = async (data) => {
     try {
-      setState((prevState) => ({ ...prevState, loading: true, error: null }));
+      setState((prevState) => ({ ...prevState, getUserLoading: true, error: null }));
       const response = await axios.post(
         "https://blog-post-api-lac.vercel.app/auth/register",
         data
       );
       const message = response.data?.message;
-      setState((prevState) => ({ ...prevState, loading: false, error: null, user: message, }));
-      navigate("/signup/success");
+      setState((prevState) => ({ ...prevState, getUserLoading: false, error: null }));
+      navigate("/signup/success", { state: { email: data.email, password: data.password } });
     } catch (error) {
       setState((prevState) => ({
         ...prevState,
-        loading: false,
+        getUserLoading: false,
         error: error.response?.data?.error || "Registration failed",
       }));
       return { error: state.error };
@@ -100,11 +98,12 @@ function AuthProvider(props) {
   // Logout user
   const logout = () => {
     localStorage.removeItem("token");
-    setState({ user: null, error: null, loading: null });
+    setState({ user: null, error: null, getUserLoading: false });
     navigate("/");
   };
 
   const isAuthenticated = Boolean(state.user);
+  console.log(state.user)
 
   return (
     <AuthContext.Provider
