@@ -71,7 +71,7 @@ const AdminCreatArticle = () => {
     setPost((prevData) => ({
       ...prevData,
       category: value, // The category name
-      category_id: selectedCategory?.id || null, // Update the category_id
+      category_id: selectedCategory ? Number(selectedCategory.id) : null, // Update the category_id
     }));
   };
 
@@ -79,23 +79,22 @@ const AdminCreatArticle = () => {
     setIsSaving(true);
     const formData = new FormData();
 
-    console.log(postStatusId);
-
     formData.append("title", post.title);
     formData.append("category_id", post.category_id);
     formData.append("description", post.description);
     formData.append("content", post.content);
     formData.append("status_id", postStatusId);
-    formData.append("imageFile", null);
-    console.log(post);
+    formData.append("image", "null");
+
     try {
       await axios.post(
         "http://localhost:4001/posts",
         formData,
         {
-          headers: { "Content-Type": "multipart/form-data" },
+          headers: { "Content-Type": "application/json" },
         }
       );
+      console.log("Post created successfully");
 
       toast.custom((t) => (
         <div className="bg-green-500 text-white p-4 rounded-sm flex justify-between items-start">
@@ -120,7 +119,8 @@ const AdminCreatArticle = () => {
         </div>
       ));
       navigate("/admin/article-management"); // Redirect after saving
-    } catch {
+    } catch(error) {
+      console.error("Error creating post:", error.message);
       toast.custom((t) => (
         <div className="bg-red-500 text-white p-4 rounded-sm flex justify-between items-start">
           <div>
