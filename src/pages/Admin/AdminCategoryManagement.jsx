@@ -2,14 +2,44 @@ import AdminNavbar from "@/components/AdminNavbar";
 import AdminSidebar from "@/components/AdminSidebar";
 import { Search, Plus, Pencil, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import axios from "axios";
 
 const AdminCategoryManagement = () => {
-  const categories = [
-    { name: "Cat" },
-    { name: "General" },
-    { name: "Inspiration" },
-  ];
+
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(null);
+  const [categories, setCategories] = useState([]);
+  const [filteredCategories, setFilteredCategories] = useState([]);
+  const [searchKeyword, setSearchKeyword] = useState("");
+
+  // Fetch post data by ID
+  useEffect(() => {
+    const fetchPost = async () => {
+      try {
+        setIsLoading(true);
+        const responseCategories = await axios.get(
+          "http://localhost:4001/categories"
+        );
+        setCategories(responseCategories.data);
+      } catch (error) {
+        console.error("Error fetching categories data:", error);
+        navigate("*");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchPost();
+  }, [navigate]);
+
+  useEffect(() => {
+    const filtered = categories.filter((category) =>
+      category.name.toLowerCase().includes(searchKeyword.toLowerCase())
+    );
+    setFilteredCategories(filtered);
+  }, [categories, searchKeyword]);
+
+  
   return (
     <div className="flex h-screen bg-white">
       <AdminSidebar />
@@ -35,6 +65,8 @@ const AdminCategoryManagement = () => {
               <input
                 type="text"
                 placeholder="Search..."
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
                 className="w-full pl-10 pr-4 py-1 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-400"
               />
             </div>
@@ -52,7 +84,7 @@ const AdminCategoryManagement = () => {
                 </tr>
               </thead>
               <tbody>
-                {categories.map((category, index) => (
+                {filteredCategories.map((category, index) => (
                   <tr
                     key={index}
                     className="border-b border-gray-200 last:border-b-0"
