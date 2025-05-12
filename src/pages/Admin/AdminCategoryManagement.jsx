@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { toast } from "sonner";
 
 const AdminCategoryManagement = () => {
 
@@ -37,7 +38,7 @@ const AdminCategoryManagement = () => {
         setCategories(responseCategories.data);
       } catch (error) {
         console.error("Error fetching categories data:", error);
-        navigate("*");
+        // navigate("*");
       } finally {
         setIsLoading(false);
       }
@@ -52,12 +53,12 @@ const AdminCategoryManagement = () => {
     setFilteredCategories(filtered);
   }, [categories, searchKeyword]);
 
-
+ 
   const handleDelete = async (categoryId) => {
     try {
       setIsLoading(true);
       await axios.delete(
-        `https://blog-post-project-api-with-db.vercel.app/categories/${categoryId}`
+        `http://localhost:4001/categories/${categoryId}`
       );
       toast.custom((t) => (
         <div className="bg-green-500 text-white p-4 rounded-sm flex justify-between items-start">
@@ -147,7 +148,16 @@ const AdminCategoryManagement = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredCategories.map((category, index) => (
+              {isLoading ? (
+                  <tr>
+                    <td colSpan={4} className="text-center py-8">Loading...</td>
+                  </tr>
+                ) : filteredCategories.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="text-center py-8">No category found.</td>
+                  </tr>
+                ) : (
+                filteredCategories.map((category, index) => (
                   <tr
                     key={index}
                     className="border-b border-gray-200 last:border-b-0"
@@ -166,7 +176,8 @@ const AdminCategoryManagement = () => {
                       </div>
                     </td>
                   </tr>
-                ))}
+                ))
+              )}
               </tbody>
             </table>
           </div>
