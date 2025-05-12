@@ -139,6 +139,8 @@ const AdminArticleManagement = () => {
               <input
                 type="text"
                 placeholder="Search..."
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
                 className="w-full pl-10 pr-4 py-1 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-400"
               />
             </div>
