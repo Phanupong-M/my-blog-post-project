@@ -9,6 +9,15 @@ import {
 } from "@/components/ui/select"
 
 import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+
+import {
   Pagination,
   PaginationContent,
   PaginationItem,
@@ -20,9 +29,12 @@ import {
 import React, { useState, useEffect } from 'react';
 import AdminNavbar from '@/components/AdminNavbar';
 import AdminSidebar from '@/components/AdminSidebar';
-import { Search, Pencil, Trash2, Plus } from 'lucide-react';
+import { Search, Pencil, Trash2, Plus, X } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+
 
 const AdminArticleManagement = () => {
   const [statusFilter, setStatusFilter] = useState('Status');
@@ -112,6 +124,52 @@ const AdminArticleManagement = () => {
       (currentPage - 1) * itemsPerPage,
       currentPage * itemsPerPage
     );
+
+
+    const handleDelete = async (postId) => {
+      try {
+        setIsLoading(true);
+        await axios.delete(
+          `http://localhost:4001/posts/${postId}`
+        );
+        toast.custom((t) => (
+          <div className="bg-green-500 text-white p-4 rounded-sm flex justify-between items-start">
+            <div>
+              <h2 className="font-bold text-lg mb-1">
+                Deleted article successfully
+              </h2>
+              <p className="text-sm">The article has been removed.</p>
+            </div>
+            <button
+              onClick={() => toast.dismiss(t)}
+              className="text-white hover:text-gray-200"
+            >
+              <X size={20} />
+            </button>
+          </div>
+        ));
+        setPosts(posts.filter((post) => post.id !== postId));
+      } catch {
+        toast.custom((t) => (
+          <div className="bg-red-500 text-white p-4 rounded-sm flex justify-between items-start">
+            <div>
+              <h2 className="font-bold text-lg mb-1">Failed to delete article</h2>
+              <p className="text-sm">
+                Something went wrong. Please try again later.
+              </p>
+            </div>
+            <button
+              onClick={() => toast.dismiss(t)}
+              className="text-white hover:text-gray-200"
+            >
+              <X size={20} />
+            </button>
+          </div>
+        ));
+      } finally {
+        setIsLoading(false);
+      }
+    };
   
 
   return (
@@ -188,11 +246,14 @@ const AdminArticleManagement = () => {
                       </td>
                       <td className="py-4 px-6">
                         <div className="flex justify-center gap-2">
-                          <button className="p-1 hover:bg-gray-100 rounded">
+                          <button className="p-1 hover:bg-gray-100 rounded cursor-pointer">
                             <Pencil size={18} className="text-gray-500" />
                           </button>
-                          <button className="p-1 hover:bg-gray-100 rounded">
-                            <Trash2 size={18} className="text-gray-500" />
+                          <button className="p-1 hover:bg-gray-100 rounded cursor-pointer">
+                            {/* <Trash2 size={18} onDelete={() => handleDelete(post.id)} className="text-gray-500" /> */}
+                            <DeletePostDialog
+                      onDelete={() => handleDelete(post.id)}
+                    />
                           </button>
                         </div>
                       </td>
@@ -209,7 +270,13 @@ const AdminArticleManagement = () => {
                     <PaginationItem>
                       <PaginationPrevious
                         onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                        className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                        className={
+                          `cursor-pointer ${
+                            currentPage === 1
+                              ? "pointer-events-none opacity-50"
+                              : "cursor-pointer"
+                          }`
+                        }
                       />
                     </PaginationItem>
                     {Array.from({ length: totalPages }, (_, i) => (
@@ -217,6 +284,7 @@ const AdminArticleManagement = () => {
                         <PaginationLink
                           isActive={currentPage === i + 1}
                           onClick={() => setCurrentPage(i + 1)}
+                          className="cursor-pointer"
                         >
                           {i + 1}
                         </PaginationLink>
@@ -225,7 +293,13 @@ const AdminArticleManagement = () => {
                     <PaginationItem>
                       <PaginationNext
                         onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                        className={
+                          `cursor-pointer ${
+                            currentPage === totalPages
+                              ? "pointer-events-none opacity-50"
+                              : "cursor-pointer"
+                          }`
+                        }
                       />
                     </PaginationItem>
                   </PaginationContent>
@@ -260,4 +334,36 @@ function SelectBar({ title,array,selected,setSelected }) {
       </SelectContent>
     </Select>
   )
+}
+
+function DeletePostDialog({ onDelete }) {
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+          <Trash2 size={18} onDelete={() => handleDelete(post.id)} className="text-gray-500" />
+      </AlertDialogTrigger>
+      <AlertDialogContent className="bg-white rounded-md pt-16 pb-6 max-w-[22rem] sm:max-w-md flex flex-col items-center">
+        <AlertDialogTitle className="text-3xl font-semibold pb-2 text-center">
+          Delete Post
+        </AlertDialogTitle>
+        <AlertDialogDescription className="flex flex-row mb-2 justify-center font-medium text-center text-muted-foreground">
+          Do you want to delete this post?
+        </AlertDialogDescription>
+        <div className="flex flex-row gap-4">
+          <AlertDialogCancel className="bg-background px-10 py-6 rounded-full text-foreground border border-foreground hover:border-muted-foreground hover:text-muted-foreground transition-colors cursor-pointer">
+            Cancel
+          </AlertDialogCancel>
+          <Button
+            onClick={onDelete}
+            className="rounded-full text-white bg-foreground hover:bg-muted-foreground transition-colors py-6 text-lg px-10 cursor-pointer"
+          >
+            Delete
+          </Button>
+        </div>
+        <AlertDialogCancel className="absolute right-4 top-2 sm:top-4 p-1 border-none cursor-pointer">
+          <X className="h-6 w-6" />
+        </AlertDialogCancel>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
 }

@@ -1,6 +1,16 @@
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+
 import AdminNavbar from "@/components/AdminNavbar";
 import AdminSidebar from "@/components/AdminSidebar";
-import { Search, Plus, Pencil, Trash2 } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -12,6 +22,9 @@ const AdminCategoryManagement = () => {
   const [categories, setCategories] = useState([]);
   const [filteredCategories, setFilteredCategories] = useState([]);
   const [searchKeyword, setSearchKeyword] = useState("");
+
+
+
 
   // Fetch post data by ID
   useEffect(() => {
@@ -38,6 +51,56 @@ const AdminCategoryManagement = () => {
     );
     setFilteredCategories(filtered);
   }, [categories, searchKeyword]);
+
+
+  const handleDelete = async (categoryId) => {
+    try {
+      setIsLoading(true);
+      await axios.delete(
+        `https://blog-post-project-api-with-db.vercel.app/categories/${categoryId}`
+      );
+      toast.custom((t) => (
+        <div className="bg-green-500 text-white p-4 rounded-sm flex justify-between items-start">
+          <div>
+            <h2 className="font-bold text-lg mb-1">
+              Deleted Category successfully
+            </h2>
+            <p className="text-sm">The category has been removed.</p>
+          </div>
+          <button
+            onClick={() => toast.dismiss(t)}
+            className="text-white hover:text-gray-200"
+          >
+            <X size={20} />
+          </button>
+        </div>
+      ));
+      setCategories(
+        categories.filter((category) => category.id !== categoryId)
+      );
+    } catch {
+      toast.custom((t) => (
+        <div className="bg-red-500 text-white p-4 rounded-sm flex justify-between items-start">
+          <div>
+            <h2 className="font-bold text-lg mb-1">
+              Failed to delete category
+            </h2>
+            <p className="text-sm">
+              Something went wrong. Please try again later.
+            </p>
+          </div>
+          <button
+            onClick={() => toast.dismiss(t)}
+            className="text-white hover:text-gray-200"
+          >
+            <X size={20} />
+          </button>
+        </div>
+      ));
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   
   return (
@@ -92,12 +155,14 @@ const AdminCategoryManagement = () => {
                     <td className="py-4 px-6 text-sm">{category.name}</td>
                     <td className="py-4 px-6">
                       <div className="flex justify-center gap-2">
-                        <button className="p-1 hover:bg-gray-100 rounded">
+                        <button className="p-1 hover:bg-gray-100 rounded cursor-pointer">
                           <Pencil size={18} className="text-gray-500" />
                         </button>
-                        <button className="p-1 hover:bg-gray-100 rounded">
-                          <Trash2 size={18} className="text-gray-500" />
-                        </button>
+                        <button className="p-1 hover:bg-gray-100 rounded cursor-pointer">
+                        <DeleteCategoryDialog
+                      onDelete={() => handleDelete(category.id)}
+                    />
+                    </button>
                       </div>
                     </td>
                   </tr>
@@ -112,3 +177,37 @@ const AdminCategoryManagement = () => {
 };
 
 export default AdminCategoryManagement;
+
+
+
+function DeleteCategoryDialog({ onDelete }) {
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+          <Trash2 size={18} onDelete={() => handleDelete(post.id)} className="text-gray-500" />
+      </AlertDialogTrigger>
+      <AlertDialogContent className="bg-white rounded-md pt-16 pb-6 max-w-[22rem] sm:max-w-md flex flex-col items-center">
+        <AlertDialogTitle className="text-3xl font-semibold pb-2 text-center">
+        Delete Category
+        </AlertDialogTitle>
+        <AlertDialogDescription className="flex flex-row mb-2 justify-center font-medium text-center text-muted-foreground">
+        Do you want to delete this Category?
+        </AlertDialogDescription>
+        <div className="flex flex-row gap-4">
+          <AlertDialogCancel className="bg-background px-10 py-6 rounded-full text-foreground border border-foreground hover:border-muted-foreground hover:text-muted-foreground transition-colors cursor-pointer">
+            Cancel
+          </AlertDialogCancel>
+          <Button
+            onClick={onDelete}
+            className="rounded-full text-white bg-foreground hover:bg-muted-foreground transition-colors py-6 text-lg px-10 cursor-pointer"
+          >
+            Delete
+          </Button>
+        </div>
+        <AlertDialogCancel className="absolute right-4 top-2 sm:top-4 p-1 border-none cursor-pointer">
+          <X className="h-6 w-6" />
+        </AlertDialogCancel>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
