@@ -1,9 +1,11 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Newspaper, Menu, User, Bell, Key, Globe, LogOut} from 'lucide-react';
+import { useAuth } from "../contexts/authentication";
 
 const AdminSidebar = () => {
   const location = useLocation();
+  const {logout} = useAuth();
 
   const navItems = [
     {
@@ -37,7 +39,7 @@ const AdminSidebar = () => {
     <div className="w-[1/3] min-h-screen bg-[#EFEEEB] border-r border-gray-200 flex flex-col">
       {/* Logo Section */}
       <div className="p-4 border-gray-200">
-        <Link to="/admin" className="text-2xl font-bold">hh.</Link>
+        <Link to="/admin/article-management" className="text-2xl font-bold">hh.</Link>
         <div className="text-sm text-gray-500">Admin panel</div>
       </div>
 
@@ -72,8 +74,8 @@ const AdminSidebar = () => {
           <span className="text-sm">hh. website</span>
         </Link>
         <button
-          onClick={() => {/* Add logout logic here */}}
-          className="flex items-center gap-3 px-3 py-2 text-gray-600 hover:bg-[#DAD6D1] rounded-lg w-full"
+          onClick={() => {logout()}}
+          className="flex items-center gap-3 px-3 py-2 text-gray-600 hover:bg-[#DAD6D1] rounded-lg w-full cursor-pointer"
         >
           <LogOut />
           <span className="text-sm">Log out</span>
