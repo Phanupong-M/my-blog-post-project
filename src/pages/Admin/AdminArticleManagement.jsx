@@ -33,7 +33,24 @@ const AdminArticleManagement = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [posts, setPosts] = useState([]);
 
+  const [categories, setCategories] = useState([]);
+  const [filteredPosts, setFilteredPosts] = useState([]);
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("");
+
   const navigate = useNavigate();
+
+  const statuses = [
+    {
+      id: 1,
+      name: "Published",
+    },
+    {
+      id: 2,
+      name: "Draft",
+    },
+  ];
 
   useEffect(() => {
     setIsLoading(true);
@@ -43,6 +60,11 @@ const AdminArticleManagement = () => {
           "http://localhost:4001/posts/admin"
         );
         setPosts(response.data.posts);
+        setFilteredPosts(response.data.posts);
+        const responseCategories = await axios.get(
+          "http://localhost:4001/categories"
+        );
+        setCategories(responseCategories.data);
       } catch (error) {
         console.error(error);
       } finally {
@@ -53,19 +75,44 @@ const AdminArticleManagement = () => {
     fetchPosts();
   }, []);
 
-  // Pagination logic
-  const totalPages = Math.ceil(posts.length / itemsPerPage);
-  const paginatedPosts = posts.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
 
-  // ถ้าเปลี่ยน page แล้วไม่มีข้อมูล (เช่นลบโพสต์จนเหลือหน้าน้อยลง) ให้กลับไปหน้าแรก
   useEffect(() => {
-    if (currentPage > totalPages && totalPages > 0) {
-      setCurrentPage(1);
+    let filtered = posts;
+
+    if (searchKeyword) {
+      filtered = filtered.filter(
+        (post) =>
+          post.title.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+          post.description
+            .toLowerCase()
+            .includes(searchKeyword.toLowerCase()) ||
+          post.content.toLowerCase().includes(searchKeyword.toLowerCase())
+      );
     }
-  }, [totalPages, currentPage]);
+
+    if (selectedCategory) {
+      filtered = filtered.filter((post) =>
+        post.category.toLowerCase().includes(selectedCategory.toLowerCase())
+      );
+    }
+
+    if (selectedStatus) {
+      filtered = filtered.filter((post) =>
+        post.status.toLowerCase().includes(selectedStatus.toLowerCase())
+      );
+    }
+
+    setFilteredPosts(filtered);
+  }, [searchKeyword, selectedCategory, selectedStatus, posts]);
+
+
+    // Pagination logic
+    const totalPages = Math.ceil(filteredPosts.length / itemsPerPage);
+    const paginatedPosts = filteredPosts.slice(
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage
+    );
+  
 
   return (
     <div className="flex h-screen bg-white">
@@ -98,10 +145,10 @@ const AdminArticleManagement = () => {
 
             <div className='flex gap-4'>
               <div className="relative">
-                <SelectBar title="Status" />
+                <SelectBar title="Status" array = {statuses} selected={selectedStatus} setSelected={setSelectedStatus} />
               </div>
               <div className="relative">
-                <SelectBar title="Category" />
+                <SelectBar title="Category" array={categories} selected={selectedCategory} setSelected={setSelectedCategory} />
               </div>
             </div>
           </div>
@@ -192,20 +239,21 @@ const AdminArticleManagement = () => {
 
 export default AdminArticleManagement;
 
-function SelectBar({ title }) {
+function SelectBar({ title,array,selected,setSelected }) {
   return (
-    <Select>
+    <Select 
+      value={selected}
+      onValueChange={(value) => setSelected(value)}
+    >
       <SelectTrigger className="w-[200px]">
         <SelectValue placeholder={title} />
       </SelectTrigger>
       <SelectContent>
         <SelectGroup>
           <SelectLabel>{title}</SelectLabel>
-          <SelectItem value="apple">Apple</SelectItem>
-          <SelectItem value="banana">Banana</SelectItem>
-          <SelectItem value="blueberry">Blueberry</SelectItem>
-          <SelectItem value="grapes">Grapes</SelectItem>
-          <SelectItem value="pineapple">Pineapple</SelectItem>
+          {array.map((category) => (
+            <SelectItem key={category.id} value={category.name}>{category.name}</SelectItem> 
+          ))}
         </SelectGroup>
       </SelectContent>
     </Select>
