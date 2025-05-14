@@ -11,7 +11,8 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/authentication";
 
 export function UserDropdown() {
-  const {state, logout } = useAuth();
+  const { state, logout } = useAuth();
+  console.log(state.user);
   const navigate = useNavigate();
 
   const handleManageAccount = () => {
@@ -33,7 +34,11 @@ export function UserDropdown() {
             <DropdownMenuTrigger asChild>
               <div className="flex items-center cursor-pointer">
                 <Avatar className="w-8 h-8">
-                  <AvatarImage src="/your-avatar.jpg" alt="User avatar" />
+                  <AvatarImage
+                    src={state.user.profilePic}
+                    alt="Profile"
+                    className="object-cover"
+                  />
                   <AvatarFallback>
                     {state.user.profilePic
                       ? ""
@@ -95,10 +100,22 @@ export function UserDropdown() {
       <div className="md:hidden w-full">
         <div className="flex items-center mb-4 p-2">
           <Avatar className="w-12 h-12">
-            <AvatarImage src="/your-avatar.jpg" alt="User avatar" />
-            <AvatarFallback>M</AvatarFallback>
+            <AvatarImage
+              src={state.user.profilePic}
+              alt="Profile"
+              className="object-cover"
+            />
+            <AvatarFallback>
+              {state.user.profilePic
+                ? ""
+                : state.user.name
+                ? state.user.name.charAt(0).toUpperCase()
+                : ""}
+            </AvatarFallback>
           </Avatar>
-          <span className="ml-3 font-medium text-gray-700">Moodeng ja</span>
+          <span className="ml-3 font-medium text-gray-700">
+            {state.user.name}
+          </span>
           <Bell className="ml-auto" />
         </div>
 

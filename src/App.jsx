@@ -47,7 +47,7 @@ function App() {
               isAuthenticated={isAuthenticated}
             >
               <SignUp />
-            // </AuthenticationRoute>
+            </AuthenticationRoute>
           }
         />
 
@@ -67,20 +67,33 @@ function App() {
         />
 
         {/* User Section */}
-        <Route 
-        path="/profile" 
-        element={
-          <ProtectedRoute
-          isLoading={state.getUserLoading}
-          isAuthenticated={isAuthenticated}
-          userRole={role}
-        >
-          <Profile />
-        </ProtectedRoute>
-        
-        } />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute
+              isLoading={state.getUserLoading}
+              isAuthenticated={isAuthenticated}
+              userRole={role}
+              requiredRole="user"
+            >
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
 
-        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route
+          path="/reset-password"
+          element={
+            <ProtectedRoute
+              isLoading={state.getUserLoading}
+              isAuthenticated={isAuthenticated}
+              userRole={role}
+              requiredRole="user"
+            >
+              <ResetPassword />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Admin Section */}
         <Route
