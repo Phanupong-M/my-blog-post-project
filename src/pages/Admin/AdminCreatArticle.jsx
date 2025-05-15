@@ -8,52 +8,139 @@ import {
     SelectValue,
   } from "@/components/ui/select";
 import { ImageIcon } from "lucide-react";
-import { useState } from "react";
+import React, { useState, useEffect } from 'react';
+import axios from "axios";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from ".././../contexts/authentication";
+import { X } from 'lucide-react';
 
 const AdminCreatArticle = () => {
-  const [formData, setFormData] = useState({
-    thumbnail: null,
-    category: "",
+  const { state } = useAuth();
+  const navigate = useNavigate();
+  const [post, setPost] = useState({
+    image: "",
+    category_id: null,
     title: "",
-    introduction: "",
+    description: "",
+    date: null,
     content: "",
+    status_id: null,
   });
+  const [categories, setCategories] = useState([]);
+  const [isLoading, setIsLoading] = useState(null);
+  const [isSaving, setIsSaving] = useState(null);
+
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setIsLoading(true);
+        const responseCategories = await axios.get(
+          "http://localhost:4001/categories"
+        );
+        setCategories(responseCategories.data);
+      } catch (error) {
+        console.error("Error fetching categories data:", error);
+        navigate("*");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, [navigate]); // Re-fetch if postId changes
+
 
   const handleThumbnailUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setFormData((prev) => ({ ...prev, thumbnail: file }));
+      setPost((prev) => ({ ...prev, thumbnail: file }));
       toast.success("Thumbnail image uploaded successfully");
     }
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setPost((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSaveAsDraft = () => {
-    // Handle save as draft logic
-    toast("Article saved as draft", {
-      description: "You can continue editing later",
-      action: {
-        label: "View draft",
-        onClick: () => console.log("View draft clicked"),
-      },
-    });
+  const handleCategoryChange = (value) => {
+    const selectedCategory = categories.find((category) => category.name === value);
+    setPost((prevData) => ({
+      ...prevData,
+      category: value, // The category name
+      category_id: selectedCategory ? Number(selectedCategory.id) : null, // Update the category_id
+    }));
   };
 
-  const handleSaveAndPublish = () => {
-    // Handle save and publish logic
-    toast.success("Article published successfully", {
-      description: "Your article is now live",
-      action: {
-        label: "View article",
-        onClick: () => console.log("View article clicked"),
-      },
-    });
+  const handleSave = async (postStatusId) => {
+    setIsSaving(true);
+    const formData = new FormData();
+
+    formData.append("title", post.title);
+    formData.append("category_id", post.category_id);
+    formData.append("description", post.description);
+    formData.append("content", post.content);
+    formData.append("status_id", postStatusId);
+    formData.append("image", "null");
+
+    try {
+      await axios.post(
+        "http://localhost:4001/posts",
+        formData,
+        {
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+      console.log("Post created successfully");
+
+      toast.custom((t) => (
+        <div className="bg-green-500 text-white p-4 rounded-sm flex justify-between items-start">
+          <div>
+            <h2 className="font-bold text-lg mb-1">
+              Created article successfully
+            </h2>
+            <p className="text-sm">
+              {postStatusId === 1
+                ? "Your article has been successfully published."
+                : postStatusId === 2
+                ? "Your article has been successfully saved as draft."
+                : ""}
+            </p>
+          </div>
+          <button
+            onClick={() => toast.dismiss(t)}
+            className="text-white hover:text-gray-200"
+          >
+            <X size={20} />
+          </button>
+        </div>
+      ));
+      navigate("/admin/article-management"); // Redirect after saving
+    } catch(error) {
+      console.error("Error creating post:", error.message);
+      toast.custom((t) => (
+        <div className="bg-red-500 text-white p-4 rounded-sm flex justify-between items-start">
+          <div>
+            <h2 className="font-bold text-lg mb-1">Failed to create article</h2>
+            <p className="text-sm">
+              Something went wrong while trying to update article. Please try
+              again later.
+            </p>
+          </div>
+          <button
+            onClick={() => toast.dismiss(t)}
+            className="text-white hover:text-gray-200"
+          >
+            <X size={20} />
+          </button>
+        </div>
+      ));
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -67,13 +154,15 @@ const AdminCreatArticle = () => {
             <Button 
                 variant="outline" 
                 className="border border-[#23201B] text-[#23201B] bg-white rounded-full px-8 py-2 mr-2"
-                onClick={handleSaveAsDraft}
+                disabled={isSaving}
+                onClick={() => handleSave(1)}
             >
                 Save as draft
             </Button>
             <Button 
                 className="bg-[#23201B] text-white rounded-full px-8 py-2"
-                onClick={handleSaveAndPublish}
+                disabled={isSaving}
+                onClick={() => handleSave(2)}
             >
                 Save and publish
             </Button>
@@ -88,9 +177,9 @@ const AdminCreatArticle = () => {
                   Thumbnail Image
                 </label>
                 <div className="flex justify-center items-center w-full max-w-lg h-64 px-6 py-20 border-2 border-gray-300 border-dashed rounded-md bg-gray-50">
-                  {formData.thumbnail ? (
+                  {post.image ? (
                     <img
-                      src={URL.createObjectURL(formData.thumbnail)}
+                      src={URL.createObjectURL(post.image)}
                       alt="Thumbnail preview"
                       className="max-h-48 mx-auto"
                     />
@@ -108,7 +197,7 @@ const AdminCreatArticle = () => {
                   />
                 </div>
                 <button
-                className="mt-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                className="mt-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 cursor-pointer"
                 onClick={() =>
                   document.getElementById("thumbnail-upload").click()
                 }
@@ -120,14 +209,18 @@ const AdminCreatArticle = () => {
 
             <div>
              <label htmlFor="category">Category</label>
-             <Select>
+             <Select
+                             value={post.category}
+                             onValueChange={(value) => {
+                               handleCategoryChange(value);
+                             }}>
                <SelectTrigger className="max-w-lg mt-1 py-3 rounded-sm text-muted-foreground focus:ring-0 focus:ring-offset-0 focus:border-muted-foreground">
                  <SelectValue placeholder="Select category" />
                </SelectTrigger>
                <SelectContent>
-                 <SelectItem value="cat">Cat</SelectItem>
-                 <SelectItem value="general">General</SelectItem>
-                 <SelectItem value="inspiration">Inspiration</SelectItem>
+               {categories.map((category) => (
+                <SelectItem key={category.id} value={category.name}>{category.name}</SelectItem> 
+              ))}
                </SelectContent>
              </Select>
            </div>
@@ -139,7 +232,7 @@ const AdminCreatArticle = () => {
                 <input
                   type="text"
                   name="title"
-                  value={formData.title}
+                  value={post.title}
                   onChange={handleInputChange}
                   placeholder="Article title"
                   className="w-full border border-gray-300 rounded-md px-3 py-2"
@@ -151,8 +244,8 @@ const AdminCreatArticle = () => {
                   Introduction (max 120 letters)
                 </label>
                 <textarea
-                  name="introduction"
-                  value={formData.introduction}
+                  name="description"
+                  value={post.description}
                   onChange={handleInputChange}
                   placeholder="Introduction"
                   maxLength={120}
@@ -167,7 +260,7 @@ const AdminCreatArticle = () => {
                 </label>
                 <textarea
                   name="content"
-                  value={formData.content}
+                  value={post.content}
                   onChange={handleInputChange}
                   placeholder="Content"
                   rows={8}
