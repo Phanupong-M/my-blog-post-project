@@ -103,7 +103,6 @@ function AuthProvider(props) {
   };
 
   const isAuthenticated = Boolean(state.user);
-  console.log(state.user)
 
   return (
     <AuthContext.Provider

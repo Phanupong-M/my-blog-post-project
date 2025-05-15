@@ -6,19 +6,74 @@ import { X, User, Lock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import { useAuth } from "../contexts/authentication"
+import { useAuth } from "../contexts/authentication";
 import axios from "axios";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
   const { state, fetchUser } = useAuth();
-
   const [formData, setFormData] = useState({
     image: "",
     name: "",
     username: "",
-    email: ""
+    email: "",
   });
+
+  const [isSaving, setIsSaving] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Check file type
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      toast.custom((t) => (
+        <div className="bg-red-500 text-white p-4 rounded-sm flex justify-between items-start">
+          <div>
+            <h2 className="font-bold text-lg mb-1">Invalid file type</h2>
+            <p className="text-sm">
+              Please upload a valid image file (JPEG, PNG, GIF, WebP).
+            </p>
+          </div>
+          <button
+            onClick={() => toast.dismiss(t)}
+            className="text-white hover:text-gray-200"
+          >
+            <X size={20} />
+          </button>
+        </div>
+      ));
+      return;
+    }
+
+    // Check file size (5MB limit)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.custom((t) => (
+        <div className="bg-red-500 text-white p-4 rounded-sm flex justify-between items-start">
+          <div>
+            <h2 className="font-bold text-lg mb-1">File too large</h2>
+            <p className="text-sm">Please upload an image smaller than 5MB.</p>
+          </div>
+          <button
+            onClick={() => toast.dismiss(t)}
+            className="text-white hover:text-gray-200"
+          >
+            <X size={20} />
+          </button>
+        </div>
+      ));
+      return;
+    }
+
+    setImageFile(file);
+    setFormData((prev) => ({
+      ...prev,
+      image: URL.createObjectURL(file),
+    }));
+  };
 
   const handleChange = (e) => {
     const { id, value } = e.target;
@@ -28,32 +83,67 @@ export default function ProfilePage() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    try {
+      setIsSaving(true);
 
-    toast.custom((t) => (
-      <div
-        className="bg-[#19B87A] text-white px-6 py-3 rounded-lg flex justify-between items-start w-full max-w-md"
-        style={{ minWidth: 400 }}
-      >
-        <div>
-          <h2 className="font-bold text-base mb-1">Saved profile</h2>
-          <p className="text-sm text-white/80">
-            Your profile has been successfully updated
-          </p>
+      const newFormData = new FormData();
+      newFormData.append("name", formData.name);
+      newFormData.append("username", formData.username);
+
+      if (imageFile) {
+        newFormData.append("imageFile", imageFile);
+      }
+
+      console.log(newFormData);
+
+      await axios.put(
+        "http://localhost:4001/profile",
+        newFormData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+
+      toast.custom((t) => (
+        <div className="bg-green-500 text-white p-4 rounded-sm flex justify-between items-start">
+          <div>
+            <h2 className="font-bold text-lg mb-1">
+              Profile updated successfully
+            </h2>
+            <p className="text-sm">Your profile changes have been saved.</p>
+          </div>
+          <button
+            onClick={() => toast.dismiss(t)}
+            className="text-white hover:text-gray-200"
+          >
+            <X size={20} />
+          </button>
         </div>
-        <button
-          onClick={() => toast.dismiss(t)}
-          className="ml-4 text-white/80 hover:text-white transition"
-          aria-label="Close"
-        >
-          <X size={20} />
-        </button>
-      </div>
-    ));
+      ));
+    } catch(error) {
+      console.error("Error updating profile:", error);
+      toast.custom((t) => (
+        <div className="bg-red-500 text-white p-4 rounded-sm flex justify-between items-start">
+          <div>
+            <h2 className="font-bold text-lg mb-1">Failed to update profile</h2>
+            <p className="text-sm">Please try again later.</p>
+          </div>
+          <button
+            onClick={() => toast.dismiss(t)}
+            className="text-white hover:text-gray-200"
+          >
+            <X size={20} />
+          </button>
+        </div>
+      ));
+    } finally {
+      setIsSaving(false);
+      fetchUser();
+    }
+  };
 
-    // alert(JSON.stringify(formData));
-  }
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -86,7 +176,6 @@ export default function ProfilePage() {
     fetchProfile();
   }, [state.user]);
 
-
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
@@ -95,23 +184,18 @@ export default function ProfilePage() {
           {/* Desktop Header */}
           <div className="hidden md:flex items-center p-6">
             <Avatar className="h-14 w-14">
-              <AvatarImage
-                src={""}
-                alt="Profile"
-                className="object-cover"
-              />
+              <AvatarImage src={state.user.profilePic} alt="Profile" className="object-cover" />
               <AvatarFallback>
                 <User />
               </AvatarFallback>
             </Avatar>
             <div className="ml-4">
-              <h1 className="text-2xl font-bold">Phanupong M.</h1>
+              <h1 className="text-2xl font-bold">{formData.name}</h1>
             </div>
 
             <span className="mx-4 h-6 border-l border-gray-300" />
 
             <h1 className="text-2xl font-bold">Profile</h1>
-            
           </div>
 
           {/* Mobile Header */}
@@ -131,16 +215,12 @@ export default function ProfilePage() {
             </div>
             <div className="flex items-center">
               <Avatar className="h-10 w-10">
-                <AvatarImage
-                  src={""}
-                  alt="Profile"
-                  className="object-cover"
-                />
+                <AvatarImage src={state.user.profilePic} alt="Profile" className="object-cover" />
                 <AvatarFallback>
                   <User className="h-8 w-8" />
                 </AvatarFallback>
               </Avatar>
-              <h2 className="ml-3 text-xl font-semibold">Panupong M.</h2>
+              <h2 className="ml-3 text-xl font-semibold">{formData.name}</h2>
             </div>
           </div>
 
@@ -169,7 +249,7 @@ export default function ProfilePage() {
               <div className="flex flex-col md:flex-row items-center justify-start md:gap-6 mb-6">
                 <Avatar className="h-28 w-28 mb-5">
                   <AvatarImage
-                    src={""}
+                    src={formData.image}
                     alt="Profile"
                     className="object-cover"
                   />
@@ -182,7 +262,7 @@ export default function ProfilePage() {
                   <input
                     type="file"
                     className="sr-only"
-                    onChange={""}
+                    onChange={handleFileChange}
                     accept="image/*"
                   />
                 </label>
@@ -238,10 +318,10 @@ export default function ProfilePage() {
                 </div>
                 <button
                   type="submit"
-                  disabled={""}
+                  disabled={isSaving}
                   className="px-8 py-2 mt-2 bg-foreground text-white rounded-full hover:bg-muted-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Save
+                   {isSaving ? "Saving..." : "Save"}
                 </button>
               </form>
             </main>
