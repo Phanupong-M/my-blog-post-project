@@ -11,7 +11,7 @@ const AdminCreateCategory = () => {
   const [categoryName, setCategoryName] = useState(""); // To hold category name input
   const [isSaving, setIsSaving] = useState(false); // To manage saving state
   const [errorMessage, setErrorMessage] = useState("");
-
+  const apiUrl = import.meta.env.VITE_API_URL;
 
   const handleSave = async () => {
     if (!categoryName) {
@@ -25,7 +25,7 @@ const AdminCreateCategory = () => {
     try {
       // Send POST request to create the category
       await axios.post(
-        "http://localhost:4001/categories",
+         `${apiUrl}/categories`,
         {
           name: categoryName,
         }

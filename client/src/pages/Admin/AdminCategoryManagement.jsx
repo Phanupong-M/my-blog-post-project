@@ -23,7 +23,7 @@ const AdminCategoryManagement = () => {
   const [categories, setCategories] = useState([]);
   const [filteredCategories, setFilteredCategories] = useState([]);
   const [searchKeyword, setSearchKeyword] = useState("");
-
+  const apiUrl = import.meta.env.VITE_API_URL;
 
 
 
@@ -33,7 +33,7 @@ const AdminCategoryManagement = () => {
       try {
         setIsLoading(true);
         const responseCategories = await axios.get(
-          "http://localhost:4001/categories"
+          `${apiUrl}/categories`
         );
         setCategories(responseCategories.data);
       } catch (error) {
@@ -58,7 +58,7 @@ const AdminCategoryManagement = () => {
     try {
       setIsLoading(true);
       await axios.delete(
-        `http://localhost:4001/categories/${categoryId}`
+        `${apiUrl}/categories/${categoryId}`
       );
       toast.custom((t) => (
         <div className="bg-green-500 text-white p-4 rounded-sm flex justify-between items-start">

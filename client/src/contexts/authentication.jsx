@@ -11,13 +11,12 @@ function AuthProvider(props) {
     error: null,
     user: null,
   });
-
+  const apiUrl = import.meta.env.VITE_API_URL;
   const navigate = useNavigate();
 
   // Fetch user details using Supabase API
   const fetchUser = async () => {
     const token = localStorage.getItem("token");
-    console.log("check token")
     if (!token) {
       setState((prevState) => ({
         ...prevState,
@@ -27,20 +26,16 @@ function AuthProvider(props) {
       return;
     }
 
-    console.log("fetching data")
-
-
     try {
       setState((prevState) => ({ ...prevState, getUserLoading: true }));
       const response = await axios.get(
-        "https://blog-post-api-lac.vercel.app/auth/get-user"
+        `${apiUrl}/auth/get-user`
       );
       setState((prevState) => ({
         ...prevState,
         user: response.data,
         getUserLoading: false,
       }));
-      console.log(response)
     } catch (error) {
       setState((prevState) => ({
         ...prevState,
@@ -60,7 +55,7 @@ function AuthProvider(props) {
     try {
       setState((prevState) => ({ ...prevState, getUserLoading: true, error: null }));
       const response = await axios.post(
-        "https://blog-post-api-lac.vercel.app/auth/login",
+        `${apiUrl}/auth/login`,
         data
       );
       const token = response.data.access_token;
@@ -83,7 +78,7 @@ function AuthProvider(props) {
     try {
       setState((prevState) => ({ ...prevState, getUserLoading: true, error: null }));
       const response = await axios.post(
-        "https://blog-post-api-lac.vercel.app/auth/register",
+        `${apiUrl}/auth/register`,
         data
       );
       const message = response.data?.message;

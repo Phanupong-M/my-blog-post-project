@@ -43,6 +43,7 @@ function ArticleSection() {
 
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const apiUrl = import.meta.env.VITE_API_URL;
 
   // Pagination handler
   const handlePageChange = (newPage) => {
@@ -57,7 +58,7 @@ function ArticleSection() {
       const categoryParam =
         selectedCategory === "Highlight" ? "" : selectedCategory;
       const response = await axios.get(
-        "https://blog-post-api-lac.vercel.app/posts",
+        `${apiUrl}/posts`,
         {
           params: { page, limit: 6, category: categoryParam },
         }

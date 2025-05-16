@@ -21,6 +21,8 @@ export default function ProfilePage() {
 
   const [isSaving, setIsSaving] = useState(false);
   const [imageFile, setImageFile] = useState(null);
+  const apiUrl = import.meta.env.VITE_API_URL;
+
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -96,10 +98,8 @@ export default function ProfilePage() {
         newFormData.append("imageFile", imageFile);
       }
 
-      console.log(newFormData);
-
       await axios.put(
-        "http://localhost:4001/profile",
+        `${apiUrl}/profile`,
         newFormData,
         {
           headers: { "Content-Type": "multipart/form-data" },
@@ -123,7 +123,6 @@ export default function ProfilePage() {
         </div>
       ));
     } catch(error) {
-      console.error("Error updating profile:", error);
       toast.custom((t) => (
         <div className="bg-red-500 text-white p-4 rounded-sm flex justify-between items-start">
           <div>

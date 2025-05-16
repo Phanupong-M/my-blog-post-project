@@ -31,6 +31,7 @@ const AdminCreatArticle = () => {
   const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(null);
   const [isSaving, setIsSaving] = useState(null);
+  const apiUrl = import.meta.env.VITE_API_URL;
 
 
   useEffect(() => {
@@ -38,7 +39,7 @@ const AdminCreatArticle = () => {
       try {
         setIsLoading(true);
         const responseCategories = await axios.get(
-          "http://localhost:4001/categories"
+          `${apiUrl}/categories`
         );
         setCategories(responseCategories.data);
       } catch (error) {
@@ -88,13 +89,12 @@ const AdminCreatArticle = () => {
 
     try {
       await axios.post(
-        "http://localhost:4001/posts",
+        `${apiUrl}/posts`,
         formData,
         {
           headers: { "Content-Type": "application/json" },
         }
       );
-      console.log("Post created successfully");
 
       toast.custom((t) => (
         <div className="bg-green-500 text-white p-4 rounded-sm flex justify-between items-start">

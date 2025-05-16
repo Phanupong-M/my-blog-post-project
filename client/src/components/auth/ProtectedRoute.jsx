@@ -10,7 +10,6 @@ function ProtectedRoute({
   children,
 }) {
 
-  console.log(isAuthenticated, userRole, requiredRole);
   if (isLoading === null || isLoading) {
     // Loading state or no data yet
     return (

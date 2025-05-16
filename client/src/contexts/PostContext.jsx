@@ -9,19 +9,20 @@ export function PostProvider({ children }) {
   const [error, setError] = useState(null);
   const [likes, setLikes] = useState(0);
   const [comments, setComments] = useState([]);
+  const apiUrl = import.meta.env.VITE_API_URL;
 
   const fetchPostById = async (postId) => {
     setLoading(true);
     setError(null);
     try {
       const response = await axios.get(
-        `https://blog-post-api-lac.vercel.app/posts/${postId}`
+        `${apiUrl}/posts/${postId}`
       );
 
       setPost(response.data.data);
       
       const likesResponse = await axios.get(
-        `https://localhost:/posts/${param.postId}/likes`
+        `${apiUrl}/${param.postId}/likes`
       );
     } catch (error) {
       setError("Failed to load the post. Please try again later.");

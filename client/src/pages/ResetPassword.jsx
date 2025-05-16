@@ -42,6 +42,8 @@ export default function ResetPassword() {
       confirmNewPassword: "",
     };
 
+    const apiUrl = import.meta.env.VITE_API_URL;
+
     if (!formData.password.trim()) {
       newErrors.password = "Please enter your current password";
       valid = false;
@@ -92,7 +94,7 @@ export default function ResetPassword() {
     try {
       setShowAlertDialog(false);
       const response = await axios.put(
-        `https://blog-post-api-lac.vercel.app/auth/reset-password`,
+        `${apiUrl}/auth/reset-password`,
         {
           oldPassword: formData.password,
           newPassword: formData.newPassword,

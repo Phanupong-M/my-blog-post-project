@@ -12,7 +12,6 @@ import { useAuth } from "@/contexts/authentication";
 
 export function UserDropdown() {
   const { state, logout } = useAuth();
-  console.log(state.user);
   const navigate = useNavigate();
 
   const handleManageAccount = () => {

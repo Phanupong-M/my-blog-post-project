@@ -29,6 +29,7 @@ const AdminResetPassword = () => {
   });
 
   const { logout } = useAuth?.() || {};
+  const apiUrl = import.meta.env.VITE_API_URL;
 
   // validate function
   const validate = () => {
@@ -91,7 +92,7 @@ const AdminResetPassword = () => {
     try {
       setIsAlertDialogOpen(false);
       const response = await axios.put(
-        `https://blog-post-api-lac.vercel.app/auth/reset-password`,
+        `${apiUrl}/auth/reset-password`,
         {
           oldPassword: formData.password,
           newPassword: formData.newPassword,

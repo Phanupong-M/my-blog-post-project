@@ -52,6 +52,7 @@ const AdminArticleManagement = () => {
   const [selectedStatus, setSelectedStatus] = useState("");
 
   const navigate = useNavigate();
+  const apiUrl = import.meta.env.VITE_API_URL;
 
   const statuses = [
     {
@@ -69,16 +70,15 @@ const AdminArticleManagement = () => {
     const fetchPosts = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:4001/posts/admin"
+          `${apiUrl}/posts/admin`
         );
         setPosts(response.data.posts);
         setFilteredPosts(response.data.posts);
         const responseCategories = await axios.get(
-          "http://localhost:4001/categories"
+          `${apiUrl}/categories`
         );
         setCategories(responseCategories.data);
       } catch (error) {
-        console.error(error);
       } finally {
         setIsLoading(false);
       }
@@ -130,7 +130,7 @@ const AdminArticleManagement = () => {
       try {
         setIsLoading(true);
         await axios.delete(
-          `http://localhost:4001/posts/${postId}`
+          `${apiUrl}/posts/${postId}`
         );
         toast.custom((t) => (
           <div className="bg-green-500 text-white p-4 rounded-sm flex justify-between items-start">
