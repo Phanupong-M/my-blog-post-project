@@ -19,11 +19,15 @@ import { formatDate } from "@/utils/dateUtils";
 import { comments } from "@/data/comment";
 import { toast } from "sonner";
 import { usePost } from "../contexts/PostContext";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/authentication";
 
 function ViewPost() {
   const [showAlertDialog, setShowAlertDialog] = useState(false);
   const { postId } = useParams();
   const { post, loading, error, fetchPostById } = usePost();
+  const navigate = useNavigate();
+  const { isAuthenticated, state } = useAuth();
 
   useEffect(() => {
     fetchPostById(postId);
@@ -37,7 +41,6 @@ function ViewPost() {
         description: "The article link has been copied to your clipboard.",
       });
     } catch (err) {
-      console.error("Failed to copy link:", err);
       toast.error("Failed to copy link", {
         description: "Please try again",
       });
@@ -46,7 +49,6 @@ function ViewPost() {
 
   const shareToSocialMedia = (platform) => {
     const url = encodeURIComponent(window.location.href);
-    console.log(url);
     let shareUrl = "";
 
     switch (platform) {
@@ -229,6 +231,19 @@ function ViewPost() {
 export default ViewPost;
 
 export function SignUpAlertDialog({ showAlertDialog, setShowAlertDialog }) {
+  const navigate = useNavigate();
+
+  const handleCreateAccount = () => {
+    setShowAlertDialog(false);
+    navigate("/signup");
+  };
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    setShowAlertDialog(false);
+    navigate("/login");
+  };
+
   return (
     <AlertDialog open={showAlertDialog} onOpenChange={setShowAlertDialog}>
       <AlertDialogContent className="max-w-md pt-12 rounded-lg shadow-lg bg-white">
@@ -239,16 +254,19 @@ export function SignUpAlertDialog({ showAlertDialog, setShowAlertDialog }) {
         </AlertDialogHeader>
         <div className="flex flex-col items-center gap-4 mt-2">
           <button
-            className="w-1/2 bg-black text-white py-3 px-6 rounded-full text-center font-medium hover:bg-gray-800 transition"
-            onClick={() => setShowAlertDialog(false)} // ตัวอย่างการปิด Dialog
+            className="w-1/2 bg-black text-white py-3 px-6 rounded-full text-center font-medium hover:bg-gray-800 transition cursor-pointer"
+            onClick={handleCreateAccount}// ตัวอย่างการปิด Dialog
           >
             Create account
           </button>
           <p className="text-sm text-gray-500">
             Already have an account?{" "}
-            <a href="#" className="text-blue-600 underline">
+            <button 
+            className="text-blue-600 underline cursor-pointer"
+            onClick={handleLogin}
+            >
               Log in
-            </a>
+            </button>
           </p>
         </div>
         <button
