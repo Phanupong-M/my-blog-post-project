@@ -7,6 +7,8 @@ export function PostProvider({ children }) {
   const [post, setPost] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [likes, setLikes] = useState(0);
+  const [comments, setComments] = useState([]);
 
   const fetchPostById = async (postId) => {
     setLoading(true);
@@ -15,7 +17,12 @@ export function PostProvider({ children }) {
       const response = await axios.get(
         `https://blog-post-api-lac.vercel.app/posts/${postId}`
       );
+
       setPost(response.data.data);
+      
+      const likesResponse = await axios.get(
+        `https://localhost:/posts/${param.postId}/likes`
+      );
     } catch (error) {
       setError("Failed to load the post. Please try again later.");
     } finally {

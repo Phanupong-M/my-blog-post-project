@@ -17,6 +17,7 @@ function AuthProvider(props) {
   // Fetch user details using Supabase API
   const fetchUser = async () => {
     const token = localStorage.getItem("token");
+    console.log("check token")
     if (!token) {
       setState((prevState) => ({
         ...prevState,
@@ -25,6 +26,9 @@ function AuthProvider(props) {
       }));
       return;
     }
+
+    console.log("fetching data")
+
 
     try {
       setState((prevState) => ({ ...prevState, getUserLoading: true }));
