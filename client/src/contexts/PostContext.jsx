@@ -9,6 +9,8 @@ export function PostProvider({ children }) {
   const [error, setError] = useState(null);
   const [likes, setLikes] = useState(0);
   const [comments, setComments] = useState([]);
+
+  
   const apiUrl = import.meta.env.VITE_API_URL;
 
   const fetchPostById = async (postId) => {
@@ -22,10 +24,17 @@ export function PostProvider({ children }) {
       setPost(response.data.data);
       
       const likesResponse = await axios.get(
-        `${apiUrl}/${param.postId}/likes`
+        `${apiUrl}/posts/${postId}/likes`
       );
+      setLikes(likesResponse.data.like_count);
+
+      const commentsResponse = await axios.get(
+        `${apiUrl}/posts/${postId}/comments`
+      );
+      setComments(commentsResponse.data);
+
     } catch (error) {
-      setError("Failed to load the post. Please try again later.");
+      setError("Failed to load the post. Please try again later.",error.message);
     } finally {
       setLoading(false);
     }
@@ -35,8 +44,12 @@ export function PostProvider({ children }) {
     <PostContext.Provider
       value={{
         post,
+        likes,
+        comments,
         loading,
         error,
+        setLikes,
+        setComments,
         fetchPostById,
       }}
     >

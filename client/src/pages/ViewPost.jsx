@@ -8,6 +8,7 @@ import LinkedInIcon from "../assets/icons/Linkedin.svg";
 import TwitterIcon from "../assets/icons/Twitter.svg";
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { X } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -16,22 +17,153 @@ import {
 } from "@/components/ui/alert-dialog";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { formatDate } from "@/utils/dateUtils";
-import { comments } from "@/data/comment";
 import { toast } from "sonner";
 import { usePost } from "../contexts/PostContext";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/authentication";
+import axios from "axios";
 
 function ViewPost() {
   const [showAlertDialog, setShowAlertDialog] = useState(false);
+  const [commentText, setCommentText] = useState("");
+  const [isError, setIsError] = useState(false);
+
   const { postId } = useParams();
-  const { post, loading, error, fetchPostById } = usePost();
-  const navigate = useNavigate();
+  const { post, likes, comments, setLikes, setComments, loading, error, fetchPostById } =
+    usePost();
+  const [isLiking, setIsLiking] = useState(false);
   const { isAuthenticated, state } = useAuth();
+  const navigate = useNavigate();
+
+  const apiUrl = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     fetchPostById(postId);
   }, [postId]);
+
+  const handleLike = async () => {
+    if (!isAuthenticated) {
+      return setShowAlertDialog(true);
+    }
+
+    setIsLiking(true);
+    try {
+      // First try to like the post
+      try {
+        const postLike = await axios.post(`${apiUrl}/posts/${postId}/likes`);
+        
+      } catch (error) {
+        // If we get a 500 error, assume the post is already liked and try to unlike
+        if (error.response?.status === 500) {
+          const postDeleted = await axios.delete(
+            `${apiUrl}/posts/${postId}/likes`
+          );
+
+        } else {
+          // If it's a different error, throw it to be caught by the outer try-catch
+          throw error;
+        }
+      }
+
+      const likesResponse = await axios.get(`${apiUrl}/posts/${postId}/likes`);
+      setLikes(likesResponse.data.like_count);
+    } catch (error) {
+      console.error("Error handling like/unlike:", error);
+      // You might want to show an error message to the user here
+    } finally {
+      setIsLiking(false);
+    }
+  };
+
+  const handleComment = async (e) => {
+    e.preventDefault();
+    if (!commentText.trim()) {
+      setIsError(true);
+    } else {
+      // Submit the comment
+      setIsError(false);
+      setCommentText("");
+      const postComments = await axios.post(
+        `${apiUrl}/posts/${postId}/comments`,
+        { comment: commentText }
+      );
+      console.log("Comment posted successfully", postComments);
+      const commentsResponse = await axios.get(
+        `${apiUrl}/posts/${postId}/comments`
+      );
+      setComments(commentsResponse.data);
+      toast.custom((t) => (
+        <div className="bg-green-500 text-white p-4 rounded-sm flex justify-between items-start max-w-md w-full">
+          <div>
+            <h2 className="font-bold text-lg mb-1">Comment Posted!</h2>
+            <p className="text-sm">
+              Your comment has been successfully added to this post.
+            </p>
+          </div>
+          <button
+            onClick={() => toast.dismiss(t)}
+            className="text-white hover:text-gray-200"
+          >
+            <X size={20} />
+          </button>
+        </div>
+      ));
+    }
+  };
+
+
+  const handleDeleteComment = async (commentId) => {
+    if (!isAuthenticated) {
+      return setShowAlertDialog(true);
+    }
+    try {
+      const deleteComment = await axios.delete(
+        `${apiUrl}/posts/${postId}/comments/${commentId}`
+      );
+
+      console.log("Comment deleted successfully", deleteComment);
+      // โหลดคอมเมนต์ใหม่หลังลบ
+      const commentsResponse = await axios.get(
+        `${apiUrl}/posts/${postId}/comments`
+      );
+      console.log("Comments updated successfully", commentsResponse);
+
+      setComments(commentsResponse.data);
+      toast.custom((t) => (
+        <div className="bg-green-500 text-white p-4 rounded-sm flex justify-between items-start max-w-md w-full">
+          <div>
+            <h2 className="font-bold text-lg mb-1">Deleted!</h2>
+            <p className="text-sm">
+            Your comment has been successfully deleted.
+            </p>
+          </div>
+          <button
+            onClick={() => toast.dismiss(t)}
+            className="text-white hover:text-gray-200"
+          >
+            <X size={20} />
+          </button>
+        </div>
+      ));
+    } catch (err) {
+      toast.custom((t) => (
+        <div className="bg-red-500 text-white p-4 rounded-sm flex justify-between items-start max-w-md w-full">
+          <div>
+            <h2 className="font-bold text-lg mb-1">Failed to Delete</h2>
+            <p className="text-sm">
+              Sorry, we couldn't delete your comment. Please try again.
+            </p>
+          </div>
+          <button
+            onClick={() => toast.dismiss(t)}
+            className="text-white hover:text-gray-200"
+          >
+            <X size={20} />
+          </button>
+        </div>
+      ));
+    }
+  };
 
   const copyToClipboard = async () => {
     try {
@@ -67,7 +199,6 @@ function ViewPost() {
 
     window.open(shareUrl, "_blank");
   };
-
   return (
     <>
       <Navbar />
@@ -75,14 +206,14 @@ function ViewPost() {
         {loading ? (
           <LoadingSpinner />
         ) : error ? (
-          <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+          <div className="flex flex-col items-center justify-center min-h-[80vh] text-center">
             <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
               <h2 className="text-xl font-semibold text-red-800 mb-2">
                 Error Loading Post
               </h2>
               <p className="text-red-600 mb-4">{error}</p>
               <button
-                onClick={fetchPostsByCategory}
+                // onClick={fetchPostsByCategory}
                 className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors cursor-pointer"
               >
                 Try Again
@@ -128,11 +259,16 @@ function ViewPost() {
                 <div className="container mx-auto my-12">
                   <div className="flex items-center mb-6 rounded-2xl bg-[#EFEEEB] p-4">
                     <div
-                      onClick={() => setShowAlertDialog(true)}
-                      className="flex items-center gap-1 bg-white rounded-full px-10 py-3 border border-gray-200 shadow-sm cursor-pointer"
+                      onClick={handleLike}
+                      disabled={isLiking}
+                      className={`flex items-center gap-1 bg-white rounded-full px-10 py-3 border border-gray-200 shadow-sm cursor-pointer${
+                        isLiking
+                          ? "bg-green-200 cursor-not-allowed text-gray-500 border-gray-300"
+                          : "bg-red-500 hover:border-muted-foreground hover:text-muted-foreground"
+                      }`}
                     >
-                      <img src={Smile} alt="Facebook" className="" />
-                      <span>{post.likes}</span>
+                      <img src={Smile} alt="like" className="" />
+                      <span>{likes}</span>
                     </div>
                     <div className="flex-grow"></div>
                     <button
@@ -171,22 +307,48 @@ function ViewPost() {
 
                   <div className="mt-4">
                     <h3 className="text-lg font-medium mb-1">Comment</h3>
+                    <form onSubmit={handleComment}>
                     <div className="border border-gray-300 rounded-lg relative">
-                      <textarea
+                      <textarea //setShowAlertDialog
+                        value={commentText}
+                        onFocus={() => {
+                          setIsError(false);
+                          if (!isAuthenticated) {
+                            return setShowAlertDialog(true);
+                          }
+                        }}
+                        onChange={(e) => setCommentText(e.target.value)}
                         placeholder="What are your thoughts?"
-                        className="w-full p-4 rounded-lg h-28 resize-none focus:outline-none"
+                        className={`w-full p-4 rounded-lg h-28 resize-none focus:outline-none${
+                          isError ? "border-red-500" : ""
+                        }`}
                       ></textarea>
+                      {isError && (
+                        <p className="text-red-500 text-sm absolute">
+                          Please type something before sending.
+                        </p>
+                      )}
                     </div>
                     <div className="flex justify-end mt-2">
-                      <button className="bg-gray-900 text-white px-6 py-2 rounded-full hover:bg-gray-800 transition cursor-pointer">
+                      <button
+                        type="submit"
+                        onClick={() => {
+                          setIsError(false);
+                          if (!isAuthenticated) {
+                            return setShowAlertDialog(true);
+                          }
+                        }}
+                        className="bg-gray-900 text-white px-6 py-2 rounded-full hover:bg-gray-800 transition cursor-pointer"
+                      >
                         Send
                       </button>
                     </div>
+                    </form>
                   </div>
                 </div>
 
                 <div>
-                  <CommentList />
+                  <CommentList data={comments} handleDeleteComment={handleDeleteComment} />
                 </div>
               </div>
 
@@ -255,15 +417,15 @@ export function SignUpAlertDialog({ showAlertDialog, setShowAlertDialog }) {
         <div className="flex flex-col items-center gap-4 mt-2">
           <button
             className="w-1/2 bg-black text-white py-3 px-6 rounded-full text-center font-medium hover:bg-gray-800 transition cursor-pointer"
-            onClick={handleCreateAccount}// ตัวอย่างการปิด Dialog
+            onClick={handleCreateAccount} // ตัวอย่างการปิด Dialog
           >
             Create account
           </button>
           <p className="text-sm text-gray-500">
             Already have an account?{" "}
-            <button 
-            className="text-blue-600 underline cursor-pointer"
-            onClick={handleLogin}
+            <button
+              className="text-blue-600 underline cursor-pointer"
+              onClick={handleLogin}
             >
               Log in
             </button>
@@ -281,23 +443,31 @@ export function SignUpAlertDialog({ showAlertDialog, setShowAlertDialog }) {
   );
 }
 
-function CommentList({ data = comments }) {
+function CommentList({ data,handleDeleteComment }) {
   return (
     <div className="container mx-auto my-8">
       {data.map((c, idx) => (
-        <div key={c.id} className="">
+        <div key={c.id} className="relative">
+          <button
+            className="absolute top-0 right-0 mt-2 mr-2 text-[#88847F] hover:text-red-500 text-xl font-bold cursor-pointer"
+            onClick={() => handleDeleteComment(c.id)}
+          >
+            ×
+          </button>
           <div className="flex items-center gap-4 mb-1">
             <img
-              src={c.avatar}
+              src={c.profile_pic}
               alt={c.name}
               className="w-12 h-12 rounded-full object-cover"
             />
             <div>
               <div className="font-bold text-[#23201B]">{c.name}</div>
-              <div className="text-xs text-[#88847F]">{c.date}</div>
+              <div className="text-xs text-[#88847F]">
+                {formatDate(c.created_at)}
+              </div>
             </div>
           </div>
-          <div className="text-[#88847F] text-base mt-3">{c.comment}</div>
+          <div className="text-[#88847F] text-base mt-3">{c.comment_text}</div>
           {idx < data.length - 1 && <hr className="my-8 border-[#E5E3DD]" />}
         </div>
       ))}
