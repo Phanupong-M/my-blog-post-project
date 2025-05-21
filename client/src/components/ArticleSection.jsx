@@ -80,7 +80,7 @@ function ArticleSection() {
   const searchPosts = async () => {
     try {
       const response = await axios.get(
-        "https://blog-post-api-lac.vercel.app/posts",
+        `${apiUrl}/posts`,
         {
           params: { keyword: debouncedValue },
         })
@@ -266,8 +266,6 @@ function BlogCard({ image, category, title, description, author, date, id }) {
 }
 
 function SelectArticle({ selectedCategory, onCategoryChange }) {
-  // console.log("category:", selectedCategory); // ตรวจสอบค่า category
-  // console.log("setCategory:", onCategoryChange); // ตรวจสอบว่า setCategory เป็นฟังก์ชันหรือไม่
 
   return (
     <Select
