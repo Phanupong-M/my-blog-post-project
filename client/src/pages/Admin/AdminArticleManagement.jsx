@@ -40,7 +40,7 @@ const AdminArticleManagement = () => {
   const [statusFilter, setStatusFilter] = useState('Status');
   const [categoryFilter, setCategoryFilter] = useState('Category');
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const itemsPerPage = 9;
 
   const [isLoading, setIsLoading] = useState(false);
   const [posts, setPosts] = useState([]);
@@ -48,8 +48,8 @@ const AdminArticleManagement = () => {
   const [categories, setCategories] = useState([]);
   const [filteredPosts, setFilteredPosts] = useState([]);
   const [searchKeyword, setSearchKeyword] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [selectedStatus, setSelectedStatus] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedStatus, setSelectedStatus] = useState("all");
 
   const navigate = useNavigate();
   const apiUrl = import.meta.env.VITE_API_URL;
@@ -57,7 +57,7 @@ const AdminArticleManagement = () => {
   const statuses = [
     {
       id: 1,
-      name: "Published",
+      name: "Publish",
     },
     {
       id: 2,
@@ -102,13 +102,13 @@ const AdminArticleManagement = () => {
       );
     }
 
-    if (selectedCategory) {
+    if (selectedCategory !== "all") {
       filtered = filtered.filter((post) =>
         post.category.toLowerCase().includes(selectedCategory.toLowerCase())
       );
     }
 
-    if (selectedStatus) {
+    if (selectedStatus !== "all") {
       filtered = filtered.filter((post) =>
         post.status.toLowerCase().includes(selectedStatus.toLowerCase())
       );
@@ -321,12 +321,15 @@ function SelectBar({ title,array,selected,setSelected }) {
       value={selected}
       onValueChange={(value) => setSelected(value)}
     >
-      <SelectTrigger className="w-[200px]">
+      <SelectTrigger className="w-[200px] cursor-pointer">
         <SelectValue placeholder={title} />
       </SelectTrigger>
       <SelectContent>
         <SelectGroup>
-          <SelectLabel>{title}</SelectLabel>
+          {/* <SelectLabel>{title}</SelectLabel> */}
+          <SelectItem key="all" value="all">
+            {title}
+          </SelectItem>
           {array.map((category) => (
             <SelectItem key={category.id} value={category.name}>{category.name}</SelectItem> 
           ))}
