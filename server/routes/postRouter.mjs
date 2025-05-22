@@ -3,11 +3,25 @@ import { Router } from "express";
 import validatePostData from "../middleware/postValidation.mjs";
 import connectionPool from "../utils/db.mjs";
 import protectUser from "../middleware/protectUser.mjs";
+import protectAdmin from "../middleware/protectAdmin.mjs";
+import multer from "multer";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
+);
 
 
  const postRouter = Router();
 
- postRouter.get("/", async (req, res) => {
+ const multerUpload = multer({ storage: multer.memoryStorage() });
+
+ const imageFileUpload = multerUpload.fields([
+  { name: "imageFile", maxCount: 1 },
+]);
+
+ postRouter.get("/",async (req, res) => {
   // ลอจิกในอ่านข้อมูลโพสต์ทั้งหมดในระบบ
   try {
     // 1) Access ข้อมูลใน Body จาก Request ด้วย req.body
@@ -119,23 +133,44 @@ import protectUser from "../middleware/protectUser.mjs";
   }
 });
 
-postRouter.post("/", validatePostData, async (req, res) => {
+postRouter.post("/", [imageFileUpload, protectAdmin], async (req, res) => {
   const newPost = req.body;
+  const file = req.files.imageFile[0];
+
+  const bucketName = "my-personal-blog";
+  const filePath = `posts/${Date.now()}`;
+
   try {
+    const { data, error } = await supabase.storage
+    .from(bucketName)
+    .upload(filePath, file.buffer, {
+      contentType: file.mimetype,
+      upsert: false, // Prevent overwriting the file
+    });
+
+    if (error) {
+      throw error; // If an error occurs while uploading
+    }
+
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from(bucketName).getPublicUrl(data.path);
+
     const query = `insert into posts (title, image, category_id, description, content, status_id)
       values ($1, $2, $3, $4, $5, $6)`;
 
     const values = [
       newPost.title,
-      newPost.image,
-      newPost.category_id,
+      publicUrl,
+      parseInt(newPost.category_id),
       newPost.description,
       newPost.content,
-      newPost.status_id,
+      parseInt(newPost.status_id),
     ];
 
     await connectionPool.query(query, values);
   } catch (error) {
+    console.log(error.message)
     return res.status(500).json({
       message: `Server could not create post because database connection`,
       error: error.message,
@@ -243,12 +278,43 @@ postRouter.get("/admin/:postId", async (req, res) => {
 });
 
 
-postRouter.put("/:postId", validatePostData, async (req, res) => {
+postRouter.put("/:postId", [imageFileUpload, protectAdmin], async (req, res) => {
 
     const postId = req.params.postId;
     const updatedPost = { ...req.body, date: new Date() };
+
+    const bucketName = "my-personal-blog";
   
     try {
+      let publicUrl = updatedPost.image; // Default to the existing image URL
+      const file = req.files?.imageFile?.[0]; // Check if a new file is attached
+
+      if (file) {
+        // If a new image file is attached, upload it to Supabase
+        const filePath = `posts/${Date.now()}`; // Unique file path
+
+        const { data, error } = await supabase.storage
+          .from(bucketName)
+          .upload(filePath, file.buffer, {
+            contentType: file.mimetype,
+            upsert: false, // Prevent overwriting existing files
+          });
+
+          if (error) {
+            throw error; // If Supabase upload fails
+          }
+
+          const response = supabase.storage
+          .from(bucketName)
+          .getPublicUrl(data.path);
+
+        if (response.error) {
+          throw response.error;
+        }
+
+        publicUrl = response.data.publicUrl;
+      }
+
       await connectionPool.query(
         `
           UPDATE posts
@@ -264,11 +330,11 @@ postRouter.put("/:postId", validatePostData, async (req, res) => {
         [
           postId,
           updatedPost.title,
-          updatedPost.image,
-          updatedPost.category_id,
+          publicUrl, // Updated image URL
+          parseInt(updatedPost.category_id),
           updatedPost.description,
           updatedPost.content,
-          updatedPost.status_id,
+          parseInt(updatedPost.status_id),
           updatedPost.date,
         ]
       );

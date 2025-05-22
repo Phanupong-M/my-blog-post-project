@@ -17,12 +17,9 @@ const imageFileUpload = multerUpload.fields([
 
 profileRouter.put("/", [imageFileUpload, protectUser], async (req, res) => {
   const { id: userId } = req.user; // Assuming `req.user` is set by authentication middleware
-  const { name, username } = req.body;
+  const { name, username} = req.body;
   const file = req.files?.imageFile?.[0]; // Get the uploaded file
-//   console.log(userId);
-//   console.log(name);
-//   console.log(username);
-//   console.log(file);
+
   // Validation
   if (!userId) {
     return res.status(401).json({ message: "Unauthorized access" });
@@ -55,7 +52,7 @@ profileRouter.put("/", [imageFileUpload, protectUser], async (req, res) => {
           upsert: false, // Prevent overwriting the file
         });
 
-        console.log(file.mimetype);
+        // console.log(file.mimetype);
       if (error) {
         throw new Error("Failed to upload profile picture to storage");
       }
@@ -101,7 +98,6 @@ profileRouter.put("/", [imageFileUpload, protectUser], async (req, res) => {
 
     return res.status(200).json({ message: "Profile updated successfully" });
   } catch (err) {
-    console.error(err);
     return res.status(500).json({
       message: "Failed to update profile",
       error: err.message,
