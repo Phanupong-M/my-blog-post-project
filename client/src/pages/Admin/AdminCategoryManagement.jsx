@@ -174,13 +174,20 @@ const AdminCategoryManagement = () => {
                 ) : (
                   paginatedCategories.map((category, index) => (
                     <tr
-                      key={index}
+                      key={category.id}
                       className="border-b border-gray-200 last:border-b-0"
                     >
                       <td className="py-4 px-6 text-sm">{category.name}</td>
                       <td className="py-4 px-6">
                         <div className="flex justify-center gap-2">
-                          <button className="p-1 hover:bg-gray-100 rounded cursor-pointer">
+                          <button
+                            className="p-1 hover:bg-gray-100 rounded cursor-pointer"
+                            onClick={() => {
+                              navigate(
+                                `/admin/category-management/edit/${category.id}`
+                              );
+                            }}
+                          >
                             <Pencil size={18} className="text-gray-500" />
                           </button>
                           <button className="p-1 hover:bg-gray-100 rounded cursor-pointer">

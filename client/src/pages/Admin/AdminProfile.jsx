@@ -6,6 +6,7 @@ import { useAuth } from "../../contexts/authentication";
 import { useEffect, useState } from "react";
 import { toast } from "sonner"; // สมมติใช้ toast
 import { X } from "lucide-react"; // สมมติใช้ icon
+import axios from "axios";
 
 const AdminProfile = () => {
   const { state, fetchUser } = useAuth();
@@ -18,6 +19,7 @@ const AdminProfile = () => {
   });
   const [isSaving, setIsSaving] = useState(false);
   const [imageFile, setImageFile] = useState(null);
+  const apiUrl = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     // ดึงข้อมูล user จาก state
@@ -39,31 +41,116 @@ const AdminProfile = () => {
     }));
   };
 
-  // handle image upload
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImageFile(file);
-      setProfile((prev) => ({
-        ...prev,
-        image: URL.createObjectURL(file),
-      }));
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Check file type
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      toast.custom((t) => (
+        <div className="bg-red-500 text-white p-4 rounded-sm flex justify-between items-start">
+          <div>
+            <h2 className="font-bold text-lg mb-1">Invalid file type</h2>
+            <p className="text-sm">
+              Please upload a valid image file (JPEG, PNG, GIF, WebP).
+            </p>
+          </div>
+          <button
+            onClick={() => toast.dismiss(t)}
+            className="text-white hover:text-gray-200"
+          >
+            <X size={20} />
+          </button>
+        </div>
+      ));
+      return;
     }
+
+    // Check file size (5MB limit)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.custom((t) => (
+        <div className="bg-red-500 text-white p-4 rounded-sm flex justify-between items-start">
+          <div>
+            <h2 className="font-bold text-lg mb-1">File too large</h2>
+            <p className="text-sm">Please upload an image smaller than 5MB.</p>
+          </div>
+          <button
+            onClick={() => toast.dismiss(t)}
+            className="text-white hover:text-gray-200"
+          >
+            <X size={20} />
+          </button>
+        </div>
+      ));
+      return;
+    }
+
+    setImageFile(file);
+    setProfile((prev) => ({
+      ...prev,
+      image: URL.createObjectURL(file),
+    }));
   };
 
   // handle save
-  const handleSave = async (e) => {
-    e.preventDefault();
-    setIsSaving(true);
+  const handleSave = async () => {
     try {
-      // TODO: call API to save profile
-      // await updateProfile(profile, imageFile);
-      toast.success("Profile updated successfully!");
-      // fetchUser(); // อัปเดตข้อมูล user ใหม่
-    } catch (err) {
-      toast.error("Failed to update profile.");
+      setIsSaving(true);
+
+      const formData = new FormData();
+      formData.append("name", profile.name);
+      formData.append("username", profile.username);
+
+      if (imageFile) {
+        formData.append("imageFile", imageFile);
+      }
+
+      await axios.put(
+        `${apiUrl}/profile`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+
+      toast.custom((t) => (
+        <div className="bg-green-500 text-white p-4 rounded-sm flex justify-between items-start">
+          <div>
+            <h2 className="font-bold text-lg mb-1">
+              Profile updated successfully
+            </h2>
+            <p className="text-sm">Your profile changes have been saved.</p>
+          </div>
+          <button
+            onClick={() => toast.dismiss(t)}
+            className="text-white hover:text-gray-200"
+          >
+            <X size={20} />
+          </button>
+        </div>
+      ));
+    } catch(error) {
+      console.error("Failed to update profile:", error.message);
+      toast.custom((t) => (
+        <div className="bg-red-500 text-white p-4 rounded-sm flex justify-between items-start">
+          <div>
+            <h2 className="font-bold text-lg mb-1">Failed to update profile</h2>
+            <p className="text-sm">Please try again later.</p>
+          </div>
+          <button
+            onClick={() => toast.dismiss(t)}
+            className="text-white hover:text-gray-200"
+          >
+            <X size={20} />
+          </button>
+        </div>
+      ));
+    } finally {
+      setIsSaving(false);
+      fetchUser();
     }
-    setIsSaving(false);
   };
 
   return (
@@ -105,12 +192,20 @@ const AdminProfile = () => {
               </Avatar>
               <label>
                 <input
+                  id="thumbnail-upload"
                   type="file"
                   accept="image/*"
                   className="hidden"
-                  onChange={handleImageChange}
+                  onChange={handleFileChange}
                 />
-                <Button variant="outline" className="cursor-pointer">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="cursor-pointer"
+                  onClick={() =>
+                    document.getElementById("thumbnail-upload").click()
+                  }
+                >
                   Upload profile picture
                 </Button>
               </label>
@@ -129,7 +224,7 @@ const AdminProfile = () => {
                 type="text"
                 value={profile.name}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-[#E5E3DD] rounded-lg text-[#88847F] bg-white focus:outline-none"
+                className="w-full px-4 py-2 border border-[#E5E3DD] rounded-lg bg-white focus:outline-none"
               />
             </div>
             {/* Username */}
@@ -146,7 +241,7 @@ const AdminProfile = () => {
                 type="text"
                 value={profile.username}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-[#E5E3DD] rounded-lg text-[#88847F] bg-white focus:outline-none"
+                className="w-full px-4 py-2 border border-[#E5E3DD] rounded-lg bg-white focus:outline-none"
               />
             </div>
             {/* Email */}
@@ -163,7 +258,7 @@ const AdminProfile = () => {
                 type="email"
                 value={profile.email}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-[#E5E3DD] rounded-lg text-[#88847F] bg-white focus:outline-none"
+                className="w-full px-4 py-2 border border-[#E5E3DD] rounded-lg bg-white focus:outline-none"
               />
             </div>
             {/* Bio */}
@@ -181,7 +276,7 @@ const AdminProfile = () => {
                 rows={4}
                 value={profile.bio}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-[#E5E3DD] rounded-lg text-[#88847F] bg-white focus:outline-none resize-none"
+                className="w-full px-4 py-2 border border-[#E5E3DD] rounded-lg bg-white focus:outline-none resize-none"
               />
             </div>
           </form>
