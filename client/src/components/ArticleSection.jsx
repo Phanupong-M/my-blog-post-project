@@ -6,19 +6,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
-
+import Pagination from "./Pagination";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-import { useEffect, useState} from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import {
   BrowserRouter as Router,
@@ -30,9 +21,10 @@ import {
 import LoadingSpinner from "./ui/LoadingSpinner";
 import { formatDate } from "@/utils/dateUtils";
 
-const categories = ["Highlight", "Cat", "Inspiration", "General"];
+// const categories = ["Highlight", "Cat", "Inspiration", "General"];
 
 function ArticleSection() {
+  const [categories, setCategories] = useState(["Highlight"]);
   const [category, setCategory] = useState("Highlight");
   const [blogPosts, setBlogPosts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -40,10 +32,23 @@ function ArticleSection() {
   const [searchResults, setSearchResults] = useState([]);
   const [debouncedValue, setDebouncedValue] = useState(searchTerm);
 
-
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const apiUrl = import.meta.env.VITE_API_URL;
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get(`${apiUrl}/categories`);
+        const categoryNames = response.data.map((cat) => cat.name);
+        setCategories(["Highlight", ...categoryNames]);
+      } catch (error) {
+        console.error("Failed to fetch categories:", error);
+      }
+    };
+
+    fetchCategories();
+  }, [apiUrl]);
 
   // Pagination handler
   const handlePageChange = (newPage) => {
@@ -57,12 +62,9 @@ function ArticleSection() {
     try {
       const categoryParam =
         selectedCategory === "Highlight" ? "" : selectedCategory;
-      const response = await axios.get(
-        `${apiUrl}/posts`,
-        {
-          params: { page, limit: 6, category: categoryParam },
-        }
-      );
+      const response = await axios.get(`${apiUrl}/posts`, {
+        params: { page, limit: 6, category: categoryParam },
+      });
 
       setBlogPosts((prevPosts) =>
         page === 1
@@ -79,16 +81,14 @@ function ArticleSection() {
 
   const searchPosts = async () => {
     try {
-      const response = await axios.get(
-        `${apiUrl}/posts`,
-        {
-          params: { keyword: debouncedValue },
-        })
-        setSearchResults(response.data.posts)
+      const response = await axios.get(`${apiUrl}/posts`, {
+        params: { keyword: debouncedValue },
+      });
+      setSearchResults(response.data.posts);
     } catch {
       console.error("Error fetching posts:", error);
     }
-  }
+  };
   useEffect(() => {
     const timeout = setTimeout(() => {
       setDebouncedValue(searchTerm.trim());
@@ -102,7 +102,7 @@ function ArticleSection() {
   }, [category, page]);
 
   useEffect(() => {
-      searchPosts();
+    searchPosts();
   }, [debouncedValue]);
 
   const handleSearch = (e) => {
@@ -145,13 +145,20 @@ function ArticleSection() {
             size={16}
             className="absolute top-[30%] right-[3%] cursor-pointer"
           />
-          {searchResults && searchTerm.length > 0 && searchResults.length > 0 && (
-            <div className="flex flex-col gap-2 absolute top-[120%] right-[3%] cursor-pointer z-2 p-2 bg-white rounded-lg">
-              {searchResults.map((post) => (
-                <div className="text-black hover:bg-[#DAD6D1] hover:text-[#75716B] p-3 rounded-2xl" key={post.id}>{post.title}</div>
-              ))}
-            </div>
-          )}
+          {searchResults &&
+            searchTerm.length > 0 &&
+            searchResults.length > 0 && (
+              <div className="flex flex-col gap-2 absolute top-[120%] right-[3%] cursor-pointer z-2 p-2 bg-white rounded-lg">
+                {searchResults.map((post) => (
+                  <div
+                    className="text-black hover:bg-[#DAD6D1] hover:text-[#75716B] p-3 rounded-2xl"
+                    key={post.id}
+                  >
+                    {post.title}
+                  </div>
+                ))}
+              </div>
+            )}
         </div>
 
         <div className="md:hidden">
@@ -159,6 +166,7 @@ function ArticleSection() {
           <SelectArticle
             selectedCategory={category}
             onCategoryChange={setCategory}
+            categories={categories}
           />
         </div>
       </div>
@@ -181,38 +189,13 @@ function ArticleSection() {
           ))}
         </div>
       )}
-{/* Pagination */}
-{totalPages > 1 && (
-        <div className="flex justify-center mb-10">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  onClick={() => handlePageChange(page - 1)}
-                  className={page === 1 ? "pointer-events-none opacity-50" : ""}
-                />
-              </PaginationItem>
-              {Array.from({ length: totalPages }, (_, i) => (
-                <PaginationItem key={i + 1}>
-                  <PaginationLink
-                    isActive={page === i + 1}
-                    onClick={() => handlePageChange(i + 1)}
-                  >
-                    {i + 1}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
-              <PaginationItem>
-                <PaginationNext
-                  onClick={() => handlePageChange(page + 1)}
-                  className={
-                    page === totalPages ? "pointer-events-none opacity-50" : ""
-                  }
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
       )}
     </section>
   );
@@ -265,8 +248,7 @@ function BlogCard({ image, category, title, description, author, date, id }) {
   );
 }
 
-function SelectArticle({ selectedCategory, onCategoryChange }) {
-
+function SelectArticle({ selectedCategory, onCategoryChange, categories }) {
   return (
     <Select
       value={selectedCategory}
