@@ -33,24 +33,13 @@ export default function AdminEditArticlePage() {
   const { state } = useAuth();
   const navigate = useNavigate();
   const { postId } = useParams(); // Get postId from the URL
-  const [post, setPost] = useState({
-    id: null,
-    image: "",
-    category_id: null,
-    title: "",
-    description: "",
-    date: null,
-    content: "",
-    status_id: null,
-    likes_count: null,
-    category: "",
-    status: "",
-  }); // Store the fetched post data
+  const [post, setPost] = useState({}); // Store the fetched post data
   const [isLoading, setIsLoading] = useState(null);
   const [isSaving, setIsSaving] = useState(null);
   const [categories, setCategories] = useState([]);
   const [imageFile, setImageFile] = useState({});
   const fileInputRef = useRef(null);
+
 
   const apiUrl = import.meta.env.VITE_API_URL;
   useEffect(() => {
@@ -94,6 +83,8 @@ export default function AdminEditArticlePage() {
       [name]: value,
     }));
   };
+
+  console.log(post);
 
   const handleCategoryChange = (value) => {
     const selectedCategory = categories.find((cat) => cat.name === value);
@@ -377,7 +368,7 @@ export default function AdminEditArticlePage() {
                 onValueChange={handleCategoryChange}
               >
                 <SelectTrigger className="max-w-lg mt-1 py-3 rounded-sm text-muted-foreground focus:ring-0 focus:ring-offset-0 focus:border-muted-foreground">
-                  <SelectValue placeholder="Select category" />
+                  <SelectValue placeholder= {post.category_name} />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((cat) => (
@@ -395,7 +386,7 @@ export default function AdminEditArticlePage() {
               <Input
                 id="author"
                 name="author"
-                value={state.user.name}
+                value={post?.author_name || ""}
                 className="mt-1 max-w-lg"
                 disabled
               />

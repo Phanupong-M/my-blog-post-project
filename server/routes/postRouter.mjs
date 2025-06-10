@@ -252,16 +252,23 @@ postRouter.get("/admin/:postId", async (req, res) => {
   try {
     // 2) เขียน Query เพื่ออ่านข้อมูลโพสต์ ด้วย Connection Pool
     const results = await connectionPool.query(
-      `
-    SELECT 
-        posts.*, 
-        categories.name AS category, 
-        statuses.status
-    FROM posts
-    INNER JOIN categories ON posts.category_id = categories.id
-    INNER JOIN statuses ON posts.status_id = statuses.id
-    WHERE posts.id = $1
-  `,
+`
+      SELECT 
+          p.*, 
+          c.name AS category_name,
+          s.status AS status_name,   
+          u.name AS author_name      
+      FROM 
+          posts p
+      LEFT JOIN 
+          categories c ON p.category_id = c.id
+      LEFT JOIN 
+          statuses s ON p.status_id = s.id
+      LEFT JOIN 
+          users u ON p.user_id = u.id -- เชื่อมตาราง posts กับ users ด้วย user_id
+      WHERE 
+          p.id = $1
+    `,
       [postIdFromClient] // status id = 2 means showing only publish post
     );
 
