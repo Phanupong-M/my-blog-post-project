@@ -137,6 +137,8 @@ postRouter.post("/", [imageFileUpload, protectAdmin], async (req, res) => {
   const newPost = req.body;
   const file = req.files.imageFile[0];
 
+  console.log(newPost);
+
   const bucketName = "my-personal-blog";
   const filePath = `posts/${Date.now()}`;
 
@@ -156,8 +158,8 @@ postRouter.post("/", [imageFileUpload, protectAdmin], async (req, res) => {
       data: { publicUrl },
     } = supabase.storage.from(bucketName).getPublicUrl(data.path);
 
-    const query = `insert into posts (title, image, category_id, description, content, status_id)
-      values ($1, $2, $3, $4, $5, $6)`;
+    const query = `insert into posts (title, image, category_id, description, content, status_id,user_id)
+      values ($1, $2, $3, $4, $5, $6, $7)`;
 
     const values = [
       newPost.title,
@@ -166,7 +168,9 @@ postRouter.post("/", [imageFileUpload, protectAdmin], async (req, res) => {
       newPost.description,
       newPost.content,
       parseInt(newPost.status_id),
+      newPost.user_id
     ];
+
 
     await connectionPool.query(query, values);
   } catch (error) {
