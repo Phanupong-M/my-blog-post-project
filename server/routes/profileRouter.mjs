@@ -17,7 +17,7 @@ const imageFileUpload = multerUpload.fields([
 
 profileRouter.put("/", [imageFileUpload, protectUser], async (req, res) => {
   const { id: userId } = req.user; // Assuming `req.user` is set by authentication middleware
-  const { name, username} = req.body;
+  const { name, username, bio} = req.body;
   const file = req.files?.imageFile?.[0]; // Get the uploaded file
 
   // Validation
@@ -35,6 +35,12 @@ profileRouter.put("/", [imageFileUpload, protectUser], async (req, res) => {
     return res
       .status(400)
       .json({ message: "Username cannot be empty or exceed 50 characters" });
+  }
+
+  if (bio && bio.length > 120) {
+    return res
+      .status(400)
+      .json({ message: "Bio cannot exceed 120 characters" });
   }
 
   let profilePicUrl = null;
@@ -80,6 +86,11 @@ profileRouter.put("/", [imageFileUpload, protectUser], async (req, res) => {
     if (profilePicUrl) {
       fieldsToUpdate.push(`profile_pic = $${paramIndex++}`);
       values.push(profilePicUrl);
+    }
+
+    if (bio !== undefined) {
+      fieldsToUpdate.push(`bio = $${paramIndex++}`);
+      values.push(bio);
     }
 
     if (fieldsToUpdate.length === 0) {

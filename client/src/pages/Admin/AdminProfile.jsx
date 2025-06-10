@@ -22,7 +22,6 @@ const AdminProfile = () => {
   const apiUrl = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
-    // ดึงข้อมูล user จาก state
     setProfile({
       image: state.user.profilePic || "",
       name: state.user.name || "",
@@ -32,7 +31,6 @@ const AdminProfile = () => {
     });
   }, [state.user]);
 
-  // handle input change
   const handleChange = (e) => {
     const { name, value } = e.target;
     setProfile((prev) => ({
@@ -102,6 +100,7 @@ const AdminProfile = () => {
       const formData = new FormData();
       formData.append("name", profile.name);
       formData.append("username", profile.username);
+      formData.append("bio", profile.bio);
 
       if (imageFile) {
         formData.append("imageFile", imageFile);
