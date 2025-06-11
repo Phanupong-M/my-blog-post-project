@@ -118,17 +118,22 @@ export function UserDropdown() {
           {/* <Bell className="ml-auto" /> */}
         </div>
 
-        <div className="flex items-center p-4">
+        <div className="flex items-center p-4 cursor-pointer" onClick={handleManageAccount}>
           <User className="w-5 h-5 mr-3 text-gray-500" />
           <span>Profile</span>
         </div>
 
-        <div className="flex items-center p-4">
+        <div className="flex items-center p-4 cursor-pointer" onClick={handleResetPassword}>
           <KeyRound className="w-5 h-5 mr-3 text-gray-500" />
           <span>Reset password</span>
         </div>
 
-        <div className="p-4 flex items-center">
+        <div
+          className="p-4 flex items-center cursor-pointer"
+          onClick={() => {
+            logout();
+          }}
+        >
           <LogOut className="w-5 h-5 mr-3 text-gray-500" />
           <span>Log out</span>
         </div>
