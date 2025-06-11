@@ -10,7 +10,7 @@ A personal blog platform for sharing hiking and travel experiences, featuring us
 - 🌄 Responsive UI built with React, TailwindCSS, and Radix UI
 - 📦 RESTful API with Express.js, PostgreSQL, and Supabase for storage
 - 🖼️ Image uploads via Multer
-- 🏕️ Dark/light mode & Markdown support
+- 🏕️ Markdown support
 
 ## Project Structure
 
