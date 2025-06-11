@@ -1,11 +1,7 @@
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer.jsx";
 import ReactMarkdown from "react-markdown";
-import CopyLinkIcon from "../assets/icons/Copy.svg";
-import Smile from "../assets/icons/Smile.svg";
-import FacebookIcon from "../assets/icons/Facebook.svg";
-import LinkedInIcon from "../assets/icons/Linkedin.svg";
-import TwitterIcon from "../assets/icons/Twitter.svg";
+import LikeShareBar from "../components/post/LikeShareBar";
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
@@ -114,7 +110,6 @@ function ViewPost() {
         `${apiUrl}/posts/${postId}/comments`,
         { comment: commentText }
       );
-      console.log("Comment posted successfully", postComments);
       const commentsResponse = await axios.get(
         `${apiUrl}/posts/${postId}/comments`
       );
@@ -138,8 +133,6 @@ function ViewPost() {
     }
   };
 
-  console.log(post);
-
   const handleDeleteComment = async (commentId) => {
     if (!isAuthenticated) {
       return setShowAlertDialog(true);
@@ -149,12 +142,9 @@ function ViewPost() {
         `${apiUrl}/posts/${postId}/comments/${commentId}`
       );
 
-      console.log("Comment deleted successfully", deleteComment);
-      // โหลดคอมเมนต์ใหม่หลังลบ
       const commentsResponse = await axios.get(
         `${apiUrl}/posts/${postId}/comments`
       );
-      console.log("Comments updated successfully", commentsResponse);
 
       setComments(commentsResponse.data);
       toast.custom((t) => (
@@ -255,8 +245,8 @@ function ViewPost() {
               alt="post.image"
               className="h-[470px] w-full object-cover rounded-lg my-8"
             />
-            <div className="flex flex-row justify-between items-start gap-3">
-              <div className="flex flex-col w-3/4">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-8 md:gap-3">
+              <div className="flex flex-col md:w-3/4">
                 <div className="flex items-center justify-start">
                   <span className="bg-green-200 rounded-full px-3 py-1 text-sm font-semibold text-green-600 mb-2">
                     {post.category}
@@ -284,53 +274,38 @@ function ViewPost() {
                   </ReactMarkdown>
                 </div>
 
-                <div className="container mx-auto my-12">
-                  <div className="flex items-center mb-6 rounded-2xl bg-[#EFEEEB] p-4">
-                    <div
-                      onClick={handleLike}
-                      disabled={isLiking}
-                      className={`flex items-center gap-1 rounded-full px-10 py-3 border border-gray-200 shadow-sm cursor-pointer
-                            ${liked ? "bg-green-200 text-white" : "bg-white"}
-                            ${isLiking ? "cursor-not-allowed opacity-60" : "hover:bg-green-50"}
-                            `}  
-                    >
-                      <img src={Smile} alt="like" className = {`${liked ? "" : ""}`} />
-                      <span className = "text-black">{likes}</span>
-                    </div>
-                    <div className="flex-grow"></div>
-                    <button
-                      className="mx-2 bg-white rounded-full px-4 py-2 border border-gray-200 shadow-sm flex items-center cursor-pointer"
-                      onClick={copyToClipboard}
-                    >
-                      <img
-                        src={CopyLinkIcon}
-                        alt="Copy link"
-                        className="w-5 h-5 mr-2"
-                      />
-                      Copy link
-                    </button>
-
-                    <div className="flex items-center gap-2">
-                      <img
-                        src={FacebookIcon}
-                        alt="Facebook"
-                        className="cursor-pointer"
-                        onClick={() => shareToSocialMedia("facebook")}
-                      />
-                      <img
-                        src={LinkedInIcon}
-                        alt="LinkedIn"
-                        className="cursor-pointer"
-                        onClick={() => shareToSocialMedia("linkedin")}
-                      />
-                      <img
-                        src={TwitterIcon}
-                        alt="Twitter"
-                        className="cursor-pointer"
-                        onClick={() => shareToSocialMedia("twitter")}
-                      />
+                <div className="w-full rounded-lg bg-[#EFEEEB] p-4 mt-12 md:hidden">
+                  <div className="flex items-center">
+                    <img
+                      className="w-11 h-11 rounded-full mr-2 object-cover"
+                      src={
+                        post.author_profile_pic ||
+                        `https://placehold.co/150x150/D7F2E9/12B279?text=${post.author_name}`
+                      }
+                      alt={post.author_name}
+                    />
+                    <div>
+                      <div className="text-gray-500 text-sm">Author</div>
+                      <div className="font-bold text-xl">
+                        {post.author_name}
+                      </div>
                     </div>
                   </div>
+                  <hr className="my-3" />
+                  <div className="text-gray-500">
+                    <p>{post.author_bio || ""}</p>
+                  </div>
+                </div>
+
+                <div className="container mx-auto my-12">
+                  <LikeShareBar
+                    likes={likes}
+                    liked={liked}
+                    isLiking={isLiking}
+                    handleLike={handleLike}
+                    copyToClipboard={copyToClipboard}
+                    shareToSocialMedia={shareToSocialMedia}
+                  />
 
                   <div className="mt-4">
                     <h3 className="text-lg font-medium mb-1">Comment</h3>
@@ -382,7 +357,7 @@ function ViewPost() {
                 </div>
               </div>
 
-              <div className="flex flex-col h-1/2 w-1/4 rounded-lg bg-[#EFEEEB] p-4 sticky top-10">
+              <div className="hidden md:flex flex-col h-1/2 w-1/4 rounded-lg bg-[#EFEEEB] p-4 sticky top-10">
                 <div className="flex items-center">
                   <img
                     className="w-11 h-11 rounded-full mr-2"
@@ -401,10 +376,10 @@ function ViewPost() {
                 <div className="text-gray-500">
                   <p>{post.author_bio || ""}</p>
                   {/* <br />
-                  <p>
-                    Lorem ipsum dolor sit amet consectetur adipisicing elit.
-                    Quisquam, quos.
-                  </p> */}
+                    <p>
+                      Lorem ipsum dolor sit amet consectetur adipisicing elit.
+                      Quisquam, quos.
+                    </p> */}
                 </div>
               </div>
             </div>
