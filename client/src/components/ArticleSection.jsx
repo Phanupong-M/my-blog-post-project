@@ -172,7 +172,7 @@ function ArticleSection() {
               />
             ))
           ) : (
-            <div className="col-span-2 text-center py-20 text-gray-500">
+            <div className="col-span-3 text-center py-20 text-gray-500">
               <p>No articles found.</p>
               {debouncedValue && (
                 <p>Try a different search term or clear the search.</p>
