@@ -26,7 +26,7 @@ export function UserDropdown() {
     <>
       <div className="hidden md:flex items-center gap-4">
         <div className="relative">
-          <Bell className="w-5 h-5 text-gray-500" />
+          {/* <Bell className="w-5 h-5 text-gray-500" /> */}
         </div>
         <div className="hidden md:block">
           <DropdownMenu>
@@ -115,7 +115,7 @@ export function UserDropdown() {
           <span className="ml-3 font-medium text-gray-700">
             {state.user.name}
           </span>
-          <Bell className="ml-auto" />
+          {/* <Bell className="ml-auto" /> */}
         </div>
 
         <div className="flex items-center p-4">
