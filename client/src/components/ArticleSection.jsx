@@ -36,6 +36,7 @@ function ArticleSection() {
     return () => clearTimeout(timeout);
   }, [searchTerm]);
 
+  console.log(blogPosts);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -88,9 +89,9 @@ function ArticleSection() {
   };
 
   const handleCategoryClick = (newCategory) => {
-    setSearchTerm(""); 
+    setSearchTerm("");
     setCategory(newCategory);
-    setPage(1); 
+    setPage(1);
   };
 
   console.log("Blog posts:", blogPosts);
@@ -151,7 +152,7 @@ function ArticleSection() {
       {loading ? (
         <LoadingSpinner />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 md:gap-x-[20px] px-4 md:px-0 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 md:gap-x-[20px] px-4 md:px-0 mb-10">
           {blogPosts.length > 0 ? (
             blogPosts.map((post) => (
               <BlogCard
@@ -163,6 +164,11 @@ function ArticleSection() {
                 author={post.author_name}
                 date={post.date}
                 id={post.id}
+                author_profile_pic={
+                  post.author_profile_pic ||
+                  "https://placehold.co/150x150/D7F2E9/12B279?text=User"
+                }
+                author_name={post.author_name || "Anonymous"}
               />
             ))
           ) : (
@@ -188,23 +194,33 @@ function ArticleSection() {
   );
 }
 
-function BlogCard({ image, category, title, description, author, date, id }) {
+function BlogCard({
+  image,
+  category,
+  title,
+  description,
+  date,
+  id,
+  author_profile_pic,
+  author_name,
+}) {
   const navigate = useNavigate();
 
   return (
     <div
-      className="flex flex-col gap-4 mt-12 cursor-pointer"
+      className="
+        flex flex-col mt-12 cursor-pointer
+        border border-gray-200 rounded-2xl shadow-md overflow-hidden
+        transition-all duration-300 ease-in-out 
+        hover:shadow-xl hover:scale-[1.03]       
+      "
       onClick={() => navigate(`/post/${id}`)}
     >
       <div className="relative h-60 md:h-112">
-        <img
-          className="w-full h-full object-cover rounded-md"
-          src={image}
-          alt={title}
-        />
+        <img className="w-full h-full object-cover" src={image} alt={title} />
       </div>
-      <div className="flex flex-col">
-        <div className="flex">
+      <div className="flex flex-col flex-grow p-4">
+        <div className="flex justify-between items-center mb-2">
           <span className="bg-green-200 rounded-full px-3 py-1 text-sm font-semibold text-green-600 mb-2">
             {category || "General"}
           </span>
@@ -218,10 +234,10 @@ function BlogCard({ image, category, title, description, author, date, id }) {
         <div className="flex items-center text-sm">
           <img
             className="w-8 h-8 rounded-full mr-2"
-            src="https://res.cloudinary.com/dcbpjtd1r/image/upload/v1728449784/my-blog-post/xgfy0xnvyemkklcqodkg.jpg"
-            alt={author}
+            src={author_profile_pic}
+            alt={author_name}
           />
-          <span>{author || "Anonymous"}</span>
+          <span>{author_name}</span>
           <span className="mx-2 text-gray-300">|</span>
           <span>{formatDate(date)}</span>
         </div>
