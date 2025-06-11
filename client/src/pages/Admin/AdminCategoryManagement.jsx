@@ -15,51 +15,51 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
+import Pagination from "../../components/Pagination";
 
 const AdminCategoryManagement = () => {
-
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(null);
   const [categories, setCategories] = useState([]);
   const [filteredCategories, setFilteredCategories] = useState([]);
   const [searchKeyword, setSearchKeyword] = useState("");
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 9;
+
   const apiUrl = import.meta.env.VITE_API_URL;
 
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
 
-
-  // Fetch post data by ID
   useEffect(() => {
     const fetchPost = async () => {
       try {
         setIsLoading(true);
-        const responseCategories = await axios.get(
-          `${apiUrl}/categories`
-        );
+        const responseCategories = await axios.get(`${apiUrl}/categories`);
         setCategories(responseCategories.data);
       } catch (error) {
         console.error("Error fetching categories data:", error);
-        // navigate("*");
       } finally {
         setIsLoading(false);
       }
     };
     fetchPost();
-  }, [navigate]);
+  }, [apiUrl]);
 
   useEffect(() => {
     const filtered = categories.filter((category) =>
       category.name.toLowerCase().includes(searchKeyword.toLowerCase())
     );
     setFilteredCategories(filtered);
+    setCurrentPage(1);
   }, [categories, searchKeyword]);
 
- 
   const handleDelete = async (categoryId) => {
     try {
       setIsLoading(true);
-      await axios.delete(
-        `${apiUrl}/categories/${categoryId}`
-      );
+      await axios.delete(`${apiUrl}/categories/${categoryId}`);
       toast.custom((t) => (
         <div className="bg-green-500 text-white p-4 rounded-sm flex justify-between items-start">
           <div>
@@ -103,20 +103,27 @@ const AdminCategoryManagement = () => {
     }
   };
 
-  
+  const totalPages = Math.ceil(filteredCategories.length / itemsPerPage);
+  const paginatedCategories = filteredCategories.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
     <div className="flex h-screen bg-white">
       <AdminSidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
-      <AdminNavbar 
-          title="Category management" 
-          actions={<button 
-          className="flex items-center gap-2 px-10 py-2 bg-gray-900 text-white rounded-full hover:bg-gray-800 transition-colors cursor-pointer"
-          onClick={() => navigate("/admin/category-management/create")}
-          > 
-            <Plus size={20} />
-            <span>Create category</span>
-          </button>}
+        <AdminNavbar
+          title="Category management"
+          actions={
+            <button
+              className="flex items-center gap-2 px-10 py-2 bg-gray-900 text-white rounded-full hover:bg-gray-800 transition-colors cursor-pointer"
+              onClick={() => navigate("/admin/category-management/create")}
+            >
+              <Plus size={20} />
+              <span>Create category</span>
+            </button>
+          }
         />
         <div className="px-14 pt-10">
           {/* Search and Filters */}
@@ -148,38 +155,58 @@ const AdminCategoryManagement = () => {
                 </tr>
               </thead>
               <tbody>
-              {isLoading ? (
+                {isLoading ? (
                   <tr>
-                    <td colSpan={4} className="text-center py-8">Loading...</td>
-                  </tr>
-                ) : filteredCategories.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="text-center py-8">No category found.</td>
-                  </tr>
-                ) : (
-                filteredCategories.map((category, index) => (
-                  <tr
-                    key={index}
-                    className="border-b border-gray-200 last:border-b-0"
-                  >
-                    <td className="py-4 px-6 text-sm">{category.name}</td>
-                    <td className="py-4 px-6">
-                      <div className="flex justify-center gap-2">
-                        <button className="p-1 hover:bg-gray-100 rounded cursor-pointer">
-                          <Pencil size={18} className="text-gray-500" />
-                        </button>
-                        <button className="p-1 hover:bg-gray-100 rounded cursor-pointer">
-                        <DeleteCategoryDialog
-                      onDelete={() => handleDelete(category.id)}
-                    />
-                    </button>
-                      </div>
+                    <td colSpan={4} className="text-center py-8">
+                      Loading...
                     </td>
                   </tr>
-                ))
-              )}
+                ) : paginatedCategories.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="text-center py-8">
+                      No category found.
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedCategories.map((category, index) => (
+                    <tr
+                      key={category.id}
+                      className="border-b border-gray-200 last:border-b-0"
+                    >
+                      <td className="py-4 px-6 text-sm">{category.name}</td>
+                      <td className="py-4 px-6">
+                        <div className="flex justify-center gap-2">
+                          <button
+                            className="p-1 hover:bg-gray-100 rounded cursor-pointer"
+                            onClick={() => {
+                              navigate(
+                                `/admin/category-management/edit/${category.id}`
+                              );
+                            }}
+                          >
+                            <Pencil size={18} className="text-gray-500" />
+                          </button>
+                          <button className="p-1 hover:bg-gray-100 rounded cursor-pointer">
+                            <DeleteCategoryDialog
+                              onDelete={() => handleDelete(category.id)}
+                            />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
+            {totalPages > 1 && (
+              <div className="flex justify-center p-4">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -189,20 +216,22 @@ const AdminCategoryManagement = () => {
 
 export default AdminCategoryManagement;
 
-
-
 function DeleteCategoryDialog({ onDelete }) {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-          <Trash2 size={18} onDelete={() => handleDelete(post.id)} className="text-gray-500" />
+        <Trash2
+          size={18}
+          onDelete={() => handleDelete(post.id)}
+          className="text-gray-500"
+        />
       </AlertDialogTrigger>
       <AlertDialogContent className="bg-white rounded-md pt-16 pb-6 max-w-[22rem] sm:max-w-md flex flex-col items-center">
         <AlertDialogTitle className="text-3xl font-semibold pb-2 text-center">
-        Delete Category
+          Delete Category
         </AlertDialogTitle>
         <AlertDialogDescription className="flex flex-row mb-2 justify-center font-medium text-center text-muted-foreground">
-        Do you want to delete this Category?
+          Do you want to delete this Category?
         </AlertDialogDescription>
         <div className="flex flex-row gap-4">
           <AlertDialogCancel className="bg-background px-10 py-6 rounded-full text-foreground border border-foreground hover:border-muted-foreground hover:text-muted-foreground transition-colors cursor-pointer">

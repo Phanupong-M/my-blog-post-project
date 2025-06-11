@@ -13,6 +13,10 @@ import AdminCreatCategory from "./pages/Admin/AdminCreateCategory";
 import AdminNotification from "./pages/Admin/AdminNotification";
 import AdminProfile from "./pages/Admin/AdminProfile";
 import AdminResetPassword from "./pages/Admin/AdminResetPassword";
+
+import AdminEditArticle from "./pages/Admin/AdminEditArticle";
+import AdminEditCategory from "./pages/Admin/AdminEditCategory";
+
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import { useAuth } from "./contexts/authentication.jsx";
@@ -124,7 +128,7 @@ function App() {
           }
         />
 
-        {/* <Route
+        <Route
           path="/admin/article-management/edit/:postId"
           element={
             <ProtectedRoute
@@ -133,10 +137,10 @@ function App() {
               userRole={state.user?.role}
               requiredRole="admin"
             >
-              <AdminEditArticlePage />
+              <AdminEditArticle />
             </ProtectedRoute>
           }
-        /> */}
+        />
 
         <Route
           path="/admin/category-management"
@@ -166,7 +170,7 @@ function App() {
           }
         />
 
-        {/* <Route
+        <Route
           path="/admin/category-management/edit/:categoryId"
           element={
             <ProtectedRoute
@@ -175,10 +179,10 @@ function App() {
               userRole={state.user?.role}
               requiredRole="admin"
             >
-              <AdminEditCategoryPage />
+              <AdminEditCategory />
             </ProtectedRoute>
           }
-        /> */}
+        />
 
         <Route
           path="/admin/profile"

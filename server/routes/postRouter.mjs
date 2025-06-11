@@ -2,11 +2,26 @@
 import { Router } from "express";
 import validatePostData from "../middleware/postValidation.mjs";
 import connectionPool from "../utils/db.mjs";
+import protectUser from "../middleware/protectUser.mjs";
+import protectAdmin from "../middleware/protectAdmin.mjs";
+import multer from "multer";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
+);
 
 
  const postRouter = Router();
 
- postRouter.get("/", async (req, res) => {
+ const multerUpload = multer({ storage: multer.memoryStorage() });
+
+ const imageFileUpload = multerUpload.fields([
+  { name: "imageFile", maxCount: 1 },
+]);
+
+ postRouter.get("/",async (req, res) => {
   // ลอจิกในอ่านข้อมูลโพสต์ทั้งหมดในระบบ
   try {
     // 1) Access ข้อมูลใน Body จาก Request ด้วย req.body
@@ -27,10 +42,13 @@ import connectionPool from "../utils/db.mjs";
     SELECT 
         posts.*, 
         categories.name AS category, 
-        statuses.status
+        statuses.status,
+        users.name AS author_name,
+        users.profile_pic AS author_profile_pic
     FROM posts
     INNER JOIN categories ON posts.category_id = categories.id
     INNER JOIN statuses ON posts.status_id = statuses.id
+    INNER JOIN users ON posts.user_id = users.id
     WHERE statuses.id = 2 
   `;
     let values = []; // status id = 2 means showing only publish post
@@ -118,20 +136,44 @@ import connectionPool from "../utils/db.mjs";
   }
 });
 
-postRouter.post("/", validatePostData, async (req, res) => {
+postRouter.post("/", [imageFileUpload, protectAdmin], async (req, res) => {
   const newPost = req.body;
+  const file = req.files.imageFile[0];
+
+  console.log(newPost);
+
+  const bucketName = "my-personal-blog";
+  const filePath = `posts/${Date.now()}`;
+
   try {
-    const query = `insert into posts (title, image, category_id, description, content, status_id)
-      values ($1, $2, $3, $4, $5, $6)`;
+    const { data, error } = await supabase.storage
+    .from(bucketName)
+    .upload(filePath, file.buffer, {
+      contentType: file.mimetype,
+      upsert: false, // Prevent overwriting the file
+    });
+
+    if (error) {
+      throw error; // If an error occurs while uploading
+    }
+
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from(bucketName).getPublicUrl(data.path);
+
+    const query = `insert into posts (title, image, category_id, description, content, status_id,user_id)
+      values ($1, $2, $3, $4, $5, $6, $7)`;
 
     const values = [
       newPost.title,
-      newPost.image,
-      newPost.category_id,
+      publicUrl,
+      parseInt(newPost.category_id),
       newPost.description,
       newPost.content,
-      newPost.status_id,
+      parseInt(newPost.status_id),
+      newPost.user_id
     ];
+
 
     await connectionPool.query(query, values);
   } catch (error) {
@@ -178,10 +220,14 @@ postRouter.get("/:postId", async (req, res) => {
   try {
     const results = await connectionPool.query(
       `
-        SELECT posts.id, posts.image, categories.name AS category, posts.title, posts.description, posts.date, posts.content, statuses.status, posts.likes_count
+        SELECT posts.id, posts.image, categories.name AS category, posts.title, 
+        posts.description, posts.date, posts.content, statuses.status, posts.likes_count,
+        users.name AS author_name, users.username AS author_username, users.profile_pic AS author_profile_pic,
+        users.bio AS author_bio
         FROM posts
         INNER JOIN categories ON posts.category_id = categories.id
         INNER JOIN statuses ON posts.status_id = statuses.id
+        INNER JOIN users ON posts.user_id = users.id
         WHERE posts.id = $1
         `,
       [postId]
@@ -192,8 +238,11 @@ postRouter.get("/:postId", async (req, res) => {
       });
     }
 
+    const post = results.rows[0];
+    post.content = post.content.replace(/\\n/g, '\n');
+
     return res.status(200).json({
-      data: results.rows[0],
+      data: post,
     });
   } catch {
     return res.status(500).json({
@@ -210,16 +259,23 @@ postRouter.get("/admin/:postId", async (req, res) => {
   try {
     // 2) เขียน Query เพื่ออ่านข้อมูลโพสต์ ด้วย Connection Pool
     const results = await connectionPool.query(
-      `
-    SELECT 
-        posts.*, 
-        categories.name AS category, 
-        statuses.status
-    FROM posts
-    INNER JOIN categories ON posts.category_id = categories.id
-    INNER JOIN statuses ON posts.status_id = statuses.id
-    WHERE posts.id = $1
-  `,
+`
+      SELECT 
+          p.*, 
+          c.name AS category_name,
+          s.status AS status_name,   
+          u.name AS author_name      
+      FROM 
+          posts p
+      LEFT JOIN 
+          categories c ON p.category_id = c.id
+      LEFT JOIN 
+          statuses s ON p.status_id = s.id
+      LEFT JOIN 
+          users u ON p.user_id = u.id -- เชื่อมตาราง posts กับ users ด้วย user_id
+      WHERE 
+          p.id = $1
+    `,
       [postIdFromClient] // status id = 2 means showing only publish post
     );
 
@@ -240,12 +296,43 @@ postRouter.get("/admin/:postId", async (req, res) => {
 });
 
 
-postRouter.put("/:postId", validatePostData, async (req, res) => {
+postRouter.put("/:postId", [imageFileUpload, protectAdmin], async (req, res) => {
 
     const postId = req.params.postId;
     const updatedPost = { ...req.body, date: new Date() };
+
+    const bucketName = "my-personal-blog";
   
     try {
+      let publicUrl = updatedPost.image; // Default to the existing image URL
+      const file = req.files?.imageFile?.[0]; // Check if a new file is attached
+
+      if (file) {
+        // If a new image file is attached, upload it to Supabase
+        const filePath = `posts/${Date.now()}`; // Unique file path
+
+        const { data, error } = await supabase.storage
+          .from(bucketName)
+          .upload(filePath, file.buffer, {
+            contentType: file.mimetype,
+            upsert: false, // Prevent overwriting existing files
+          });
+
+          if (error) {
+            throw error; // If Supabase upload fails
+          }
+
+          const response = supabase.storage
+          .from(bucketName)
+          .getPublicUrl(data.path);
+
+        if (response.error) {
+          throw response.error;
+        }
+
+        publicUrl = response.data.publicUrl;
+      }
+
       await connectionPool.query(
         `
           UPDATE posts
@@ -261,11 +348,11 @@ postRouter.put("/:postId", validatePostData, async (req, res) => {
         [
           postId,
           updatedPost.title,
-          updatedPost.image,
-          updatedPost.category_id,
+          publicUrl, // Updated image URL
+          parseInt(updatedPost.category_id),
           updatedPost.description,
           updatedPost.content,
-          updatedPost.status_id,
+          parseInt(updatedPost.status_id),
           updatedPost.date,
         ]
       );
@@ -300,5 +387,210 @@ postRouter.put("/:postId", validatePostData, async (req, res) => {
       });
     }
   });
+
+  postRouter.get("/:postId/likes", async (req, res) => {
+    const postIdFromClient = req.params.postId;
+    // 2) เขียน Query เพื่อนับจำนวนไลค์ ด้วย Connection Pool
+    try {
+      const results = await connectionPool.query(
+        `
+      SELECT 
+          COUNT(*) AS like_count
+      FROM likes
+      WHERE post_id = $1
+    `,
+        [postIdFromClient]
+      );
+      // 3) Return ตัว Response กลับไปหา Client
+      return res
+        .status(200)
+        .json({ like_count: Number(results.rows[0].like_count) });
+    } catch {
+      return res.status(500).json({
+        message: `Server could not count likes because database connection`,
+      });
+    }
+  });
+
+  postRouter.post("/:postId/likes", protectUser, async (req, res) => {
+    // Logic to create a like for a post with the given Id
+    // 1) Access the Endpoint Parameter with req.params
+    const postIdFromClient = req.params.postId;
+    const userId = req.user.id;
+    // 2) Write Query to create a like using Connection Pool
+    try {
+      const query = `INSERT INTO likes (post_id, user_id) VALUES ($1, $2)`;
+      const values = [postIdFromClient, userId];
+      await connectionPool.query(query, values);
+
+      // 3) Return the Response to the Client indicating success
+      return res.status(201).json({ message: "Created like successfully" });
+    } catch (err) {
+      return res.status(500).json({
+        message:
+          "Server could not create like because of a database connection issue",
+        error: err.message,
+      });
+    }
+  });
+
+  postRouter.delete("/:postId/likes",protectUser, async (req, res) => {
+    // Logic to delete a like for a post with the given Id
+    // 1) Access the Endpoint Parameter with req.params
+    const postIdFromClient = req.params.postId;
+    const userId = req.user.id;
+    // 2) Write Query to delete a like using Connection Pool
+    try {
+      // Query to delete the like based on post_id and user_id
+      const query = `DELETE FROM likes WHERE post_id = $1 AND user_id = $2`;
+      const values = [postIdFromClient, userId];
+  
+      const result = await connectionPool.query(query, values);
+  
+      // Check if a row was deleted
+      if (result.rowCount === 0) {
+        return res
+          .status(404)
+          .json({ message: "Like not found or you do not own this like" });
+      }
+  
+      // 3) Return the Response to the Client indicating success
+      return res.status(200).json({ message: "Deleted like successfully" });
+    } catch (err) {
+      return res.status(500).json({
+        message: `Server could not delete like due to a database connection issue`,
+        error: err.message,
+      });
+    }
+  });
+
+  postRouter.get("/:postId/comments", async (req, res) => {
+    // ลอจิกในการอ่านข้อมูลคอมเมนต์ของโพสต์ด้วย Id ในระบบ
+  
+    // 1) Access ตัว Endpoint Parameter ด้วย req.params
+    const postIdFromClient = req.params.postId;
+  
+    try {
+      // 2) เขียน Query เพื่ออ่านข้อมูลคอมเมนต์ ด้วย Connection Pool
+      const results = await connectionPool.query(
+        `
+      SELECT 
+          comments.*, 
+          users.name,
+          users.username,
+          users.profile_pic,
+          users.role
+      FROM comments
+      INNER JOIN users ON comments.user_id = users.id
+      WHERE post_id = $1
+      ORDER BY comments.created_at DESC
+    `,
+        [postIdFromClient]
+      );
+  
+      // 3) Return ตัว Response กลับไปหา Client
+      return res.status(200).json(results.rows);
+    } catch {
+      return res.status(500).json({
+        message: `Server could not read comments because database connection`,
+      });
+    }
+  });
+
+  postRouter.post("/:postId/comments", protectUser, async (req, res) => {
+    // ลอจิกในการสร้างข้อมูลคอมเมนต์ของโพสต์ด้วย Id ในระบบ
+    // 1) Access ตัว Endpoint Parameter ด้วย req.params
+    const postIdFromClient = req.params.postId;
+    const { id: userId } = req.user;
+    const { comment } = req.body;
+  
+    if (!comment || comment.trim().length === 0) {
+      return res.status(400).json({ message: "Comment content cannot be empty" });
+    }
+  
+    if (comment.length > 500) {
+      return res.status(400).json({
+        message: "Comment content exceeds the maximum length of 500 characters",
+      });
+    }
+    try {
+      // Insert the comment into the database
+      const query = `INSERT INTO comments (post_id, user_id, comment_text) VALUES ($1, $2, $3)`;
+      const values = [postIdFromClient, userId, comment];
+      await connectionPool.query(query, values);
+  
+      // 3) Return ตัว Response กลับไปหา Client ว่าสร้างสำเร็จ
+      return res.status(201).json({ message: "Created comment successfully" });
+    } catch (err) {
+      console.error(err); // Log error for debugging
+      return res.status(500).json({
+        message:
+          "Server could not create comment due to a database connection issue",
+        error: err.message,
+      });
+    }
+  });
+  
+  postRouter.delete(
+    "/:postId/comments/:commentId",
+    protectUser,
+    async (req, res) => {
+      const postIdFromClient = req.params.postId;
+      const commentIdFromClient = req.params.commentId;
+      const userId = req.user.id;
+      const userRole = req.user.checkRole;
+
+      try {
+        let query, values;
+  
+        if (userRole === "admin") {
+          // admin ลบได้ทุก comment
+          query = `
+            DELETE FROM comments
+            WHERE id = $1 AND post_id = $2
+          `;
+          values = [commentIdFromClient, postIdFromClient];
+        } else {
+          // user ทั่วไป ลบได้เฉพาะของตัวเอง
+          query = `
+            DELETE FROM comments
+            WHERE id = $1 AND post_id = $2 AND user_id = $3
+          `;
+          values = [commentIdFromClient, postIdFromClient, userId];
+        }
+  
+        const result = await connectionPool.query(query, values);
+  
+        if (result.rowCount === 0) {
+          return res.status(404).json({
+            message: "comment not found or you do not own this comment",
+          });
+        }
+  
+        return res.status(200).json({ message: "Deleted comment successfully" });
+      } catch (err) {
+        return res.status(500).json({
+          message: `Server could not delete comment due to a database connection issue`,
+          error: err.message,
+        });
+      }
+    }
+  );
+
+  postRouter.get("/:postId/likes/status", protectUser, async (req, res) => {
+  const postId = req.params.postId;
+  const userId = req.user.id;
+  try {
+    const result = await connectionPool.query(
+      `SELECT 1 FROM likes WHERE post_id = $1 AND user_id = $2 LIMIT 1`,
+      [postId, userId]
+    );
+    res.json({ liked: result.rowCount > 0 });
+  } catch {
+    res.status(500).json({ message: "Could not check like status" });
+  }
+});
+  
+  
 
   export default postRouter;

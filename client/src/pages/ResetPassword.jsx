@@ -20,7 +20,7 @@ import { useAuth } from "../contexts/authentication"
 export default function ResetPassword() {
   const navigate = useNavigate();
   const [showAlertDialog, setShowAlertDialog] = useState(false);
-  const {logout} = useAuth();
+  const {logout, state} = useAuth();
 
   const [formData, setFormData] = useState({
     password: "",
@@ -160,13 +160,13 @@ export default function ResetPassword() {
           {/* Desktop Header */}
           <div className="hidden md:flex items-center p-6">
             <Avatar className="h-14 w-14">
-              <AvatarImage src={""} alt="Profile" className="object-cover" />
+              <AvatarImage src={state.user.profilePic} alt="Profile" className="object-cover" />
               <AvatarFallback>
                 <User />
               </AvatarFallback>
             </Avatar>
             <div className="ml-4">
-              <h1 className="text-2xl font-bold">Phanupong M.</h1>
+              <h1 className="text-2xl font-bold">{state.user.name}</h1>
             </div>
 
             <span className="mx-4 h-6 border-l border-gray-300" />
@@ -191,12 +191,12 @@ export default function ResetPassword() {
             </div>
             <div className="flex items-center">
               <Avatar className="h-10 w-10">
-                <AvatarImage src={""} alt="Profile" className="object-cover" />
+                <AvatarImage src={state.user.profilePic} alt="Profile" className="object-cover" />
                 <AvatarFallback>
                   <User />
                 </AvatarFallback>
               </Avatar>
-              <h2 className="ml-3 text-xl font-semibold">Panupong M</h2>
+              <h2 className="ml-3 text-xl font-semibold">{state.user.name}</h2>
             </div>
           </div>
 
