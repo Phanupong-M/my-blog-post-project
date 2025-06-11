@@ -128,7 +128,7 @@ function ArticleSection() {
             placeholder="Search articles..."
             onChange={handleSearchChange}
             value={searchTerm}
-            className="mb-[16px] md:mb-0 bg-white md:w-120"
+            className="mb-[16px] md:mb-0 bg-white md:w-80"
           />
           <Search
             strokeWidth={1}
@@ -158,7 +158,7 @@ function ArticleSection() {
               <BlogCard
                 key={post.id}
                 image={post.image}
-                category={post.category_name}
+                category={post.category}
                 title={post.title}
                 description={post.description}
                 author={post.author_name}
@@ -222,7 +222,7 @@ function BlogCard({
       <div className="flex flex-col flex-grow p-4">
         <div className="flex justify-between items-center mb-2">
           <span className="bg-green-200 rounded-full px-3 py-1 text-sm font-semibold text-green-600 mb-2">
-            {category || "General"}
+            {category || "No Category"}
           </span>
         </div>
         <h2 className="text-start font-bold text-xl mb-2 line-clamp-2 hover:underline">
