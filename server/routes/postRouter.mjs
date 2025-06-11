@@ -42,10 +42,13 @@ const supabase = createClient(
     SELECT 
         posts.*, 
         categories.name AS category, 
-        statuses.status
+        statuses.status,
+        users.name AS author_name,
+        users.profile_pic AS author_profile_pic
     FROM posts
     INNER JOIN categories ON posts.category_id = categories.id
     INNER JOIN statuses ON posts.status_id = statuses.id
+    INNER JOIN users ON posts.user_id = users.id
     WHERE statuses.id = 2 
   `;
     let values = []; // status id = 2 means showing only publish post
