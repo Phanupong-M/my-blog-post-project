@@ -472,7 +472,7 @@ function CommentList({ data, handleDeleteComment }) {
               </div>
             </div>
           </div>
-          <div className="text-[#88847F] text-base mt-3">{c.comment_text}</div>
+          <div className="text-base mt-3">{c.comment_text}</div>
           {idx < data.length - 1 && <hr className="my-8 border-[#E5E3DD]" />}
         </div>
       ))}
