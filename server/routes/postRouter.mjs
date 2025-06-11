@@ -217,10 +217,14 @@ postRouter.get("/:postId", async (req, res) => {
   try {
     const results = await connectionPool.query(
       `
-        SELECT posts.id, posts.image, categories.name AS category, posts.title, posts.description, posts.date, posts.content, statuses.status, posts.likes_count
+        SELECT posts.id, posts.image, categories.name AS category, posts.title, 
+        posts.description, posts.date, posts.content, statuses.status, posts.likes_count,
+        users.name AS author_name, users.username AS author_username, users.profile_pic AS author_profile_pic,
+        users.bio AS author_bio
         FROM posts
         INNER JOIN categories ON posts.category_id = categories.id
         INNER JOIN statuses ON posts.status_id = statuses.id
+        INNER JOIN users ON posts.user_id = users.id
         WHERE posts.id = $1
         `,
       [postId]
@@ -569,6 +573,20 @@ postRouter.put("/:postId", [imageFileUpload, protectAdmin], async (req, res) => 
       }
     }
   );
+
+  postRouter.get("/:postId/likes/status", protectUser, async (req, res) => {
+  const postId = req.params.postId;
+  const userId = req.user.id;
+  try {
+    const result = await connectionPool.query(
+      `SELECT 1 FROM likes WHERE post_id = $1 AND user_id = $2 LIMIT 1`,
+      [postId, userId]
+    );
+    res.json({ liked: result.rowCount > 0 });
+  } catch {
+    res.status(500).json({ message: "Could not check like status" });
+  }
+});
   
   
 

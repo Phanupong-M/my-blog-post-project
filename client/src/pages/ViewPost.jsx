@@ -27,10 +27,19 @@ function ViewPost() {
   const [showAlertDialog, setShowAlertDialog] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [isError, setIsError] = useState(false);
+  const [liked, setLiked] = useState(false);
 
   const { postId } = useParams();
-  const { post, likes, comments, setLikes, setComments, loading, error, fetchPostById } =
-    usePost();
+  const {
+    post,
+    likes,
+    comments,
+    setLikes,
+    setComments,
+    loading,
+    error,
+    fetchPostById,
+  } = usePost();
   const [isLiking, setIsLiking] = useState(false);
   const { isAuthenticated, state } = useAuth();
   const navigate = useNavigate();
@@ -40,6 +49,24 @@ function ViewPost() {
   useEffect(() => {
     fetchPostById(postId);
   }, [postId]);
+
+  const fetchLikeStatus = async () => {
+    if (!isAuthenticated) {
+      setLiked(false);
+      return;
+    }
+    try {
+      const res = await axios.get(`${apiUrl}/posts/${postId}/likes/status`);
+      setLiked(res.data.liked);
+    } catch {
+      setLiked(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPostById(postId);
+    fetchLikeStatus();
+  }, [postId, isAuthenticated]);
 
   const handleLike = async () => {
     if (!isAuthenticated) {
@@ -51,14 +78,12 @@ function ViewPost() {
       // First try to like the post
       try {
         const postLike = await axios.post(`${apiUrl}/posts/${postId}/likes`);
-        
       } catch (error) {
         // If we get a 500 error, assume the post is already liked and try to unlike
         if (error.response?.status === 500) {
           const postDeleted = await axios.delete(
             `${apiUrl}/posts/${postId}/likes`
           );
-
         } else {
           // If it's a different error, throw it to be caught by the outer try-catch
           throw error;
@@ -67,6 +92,8 @@ function ViewPost() {
 
       const likesResponse = await axios.get(`${apiUrl}/posts/${postId}/likes`);
       setLikes(likesResponse.data.like_count);
+
+      fetchLikeStatus();
     } catch (error) {
       console.error("Error handling like/unlike:", error);
       // You might want to show an error message to the user here
@@ -111,6 +138,7 @@ function ViewPost() {
     }
   };
 
+  console.log(post);
 
   const handleDeleteComment = async (commentId) => {
     if (!isAuthenticated) {
@@ -134,7 +162,7 @@ function ViewPost() {
           <div>
             <h2 className="font-bold text-lg mb-1">Deleted!</h2>
             <p className="text-sm">
-            Your comment has been successfully deleted.
+              Your comment has been successfully deleted.
             </p>
           </div>
           <button
@@ -227,8 +255,8 @@ function ViewPost() {
               alt="post.image"
               className="h-[470px] w-full object-cover rounded-lg my-8"
             />
-            <div className="flex flex-row justify-between items-start">
-              <div className="flex flex-col">
+            <div className="flex flex-row justify-between items-start gap-3">
+              <div className="flex flex-col w-3/4">
                 <div className="flex items-center justify-start">
                   <span className="bg-green-200 rounded-full px-3 py-1 text-sm font-semibold text-green-600 mb-2">
                     {post.category}
@@ -261,14 +289,13 @@ function ViewPost() {
                     <div
                       onClick={handleLike}
                       disabled={isLiking}
-                      className={`flex items-center gap-1 bg-white rounded-full px-10 py-3 border border-gray-200 shadow-sm cursor-pointer${
-                        isLiking
-                          ? "bg-green-200 cursor-not-allowed text-gray-500 border-gray-300"
-                          : "bg-red-500 hover:border-muted-foreground hover:text-muted-foreground"
-                      }`}
+                      className={`flex items-center gap-1 rounded-full px-10 py-3 border border-gray-200 shadow-sm cursor-pointer
+                            ${liked ? "bg-green-200 text-white" : "bg-white"}
+                            ${isLiking ? "cursor-not-allowed opacity-60" : "hover:bg-green-50"}
+                            `}  
                     >
-                      <img src={Smile} alt="like" className="" />
-                      <span>{likes}</span>
+                      <img src={Smile} alt="like" className = {`${liked ? "" : ""}`} />
+                      <span className = "text-black">{likes}</span>
                     </div>
                     <div className="flex-grow"></div>
                     <button
@@ -308,47 +335,50 @@ function ViewPost() {
                   <div className="mt-4">
                     <h3 className="text-lg font-medium mb-1">Comment</h3>
                     <form onSubmit={handleComment}>
-                    <div className="border border-gray-300 rounded-lg relative">
-                      <textarea //setShowAlertDialog
-                        value={commentText}
-                        onFocus={() => {
-                          setIsError(false);
-                          if (!isAuthenticated) {
-                            return setShowAlertDialog(true);
-                          }
-                        }}
-                        onChange={(e) => setCommentText(e.target.value)}
-                        placeholder="What are your thoughts?"
-                        className={`w-full p-4 rounded-lg h-28 resize-none focus:outline-none${
-                          isError ? "border-red-500" : ""
-                        }`}
-                      ></textarea>
-                      {isError && (
-                        <p className="text-red-500 text-sm absolute">
-                          Please type something before sending.
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex justify-end mt-2">
-                      <button
-                        type="submit"
-                        onClick={() => {
-                          setIsError(false);
-                          if (!isAuthenticated) {
-                            return setShowAlertDialog(true);
-                          }
-                        }}
-                        className="bg-gray-900 text-white px-6 py-2 rounded-full hover:bg-gray-800 transition cursor-pointer"
-                      >
-                        Send
-                      </button>
-                    </div>
+                      <div className="border border-gray-300 rounded-lg relative">
+                        <textarea //setShowAlertDialog
+                          value={commentText}
+                          onFocus={() => {
+                            setIsError(false);
+                            if (!isAuthenticated) {
+                              return setShowAlertDialog(true);
+                            }
+                          }}
+                          onChange={(e) => setCommentText(e.target.value)}
+                          placeholder="What are your thoughts?"
+                          className={`w-full p-4 rounded-lg h-28 resize-none focus:outline-none${
+                            isError ? "border-red-500" : ""
+                          }`}
+                        ></textarea>
+                        {isError && (
+                          <p className="text-red-500 text-sm absolute">
+                            Please type something before sending.
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex justify-end mt-2">
+                        <button
+                          type="submit"
+                          onClick={() => {
+                            setIsError(false);
+                            if (!isAuthenticated) {
+                              return setShowAlertDialog(true);
+                            }
+                          }}
+                          className="bg-gray-900 text-white px-6 py-2 rounded-full hover:bg-gray-800 transition cursor-pointer"
+                        >
+                          Send
+                        </button>
+                      </div>
                     </form>
                   </div>
                 </div>
 
                 <div>
-                  <CommentList data={comments} handleDeleteComment={handleDeleteComment} />
+                  <CommentList
+                    data={comments}
+                    handleDeleteComment={handleDeleteComment}
+                  />
                 </div>
               </div>
 
@@ -356,25 +386,25 @@ function ViewPost() {
                 <div className="flex items-center">
                   <img
                     className="w-11 h-11 rounded-full mr-2"
-                    src="https://res.cloudinary.com/dcbpjtd1r/image/upload/v1728449784/my-blog-post/xgfy0xnvyemkklcqodkg.jpg"
-                    alt={post.author}
+                    src={
+                      post.author_profile_pic ||
+                      `https://placehold.co/150x150/D7F2E9/12B279?text=${post.author_name}`
+                    }
+                    alt={post.author_name}
                   />
                   <div>
                     <div className="text-gray-500 text-sm">Author</div>
-                    <div className="font-bold text-xl">{post.author}</div>
+                    <div className="font-bold text-xl">{post.author_name}</div>
                   </div>
                 </div>
                 <hr className="my-3" />
                 <div className="text-gray-500">
+                  <p>{post.author_bio || ""}</p>
+                  {/* <br />
                   <p>
                     Lorem ipsum dolor sit amet consectetur adipisicing elit.
                     Quisquam, quos.
-                  </p>
-                  <br />
-                  <p>
-                    Lorem ipsum dolor sit amet consectetur adipisicing elit.
-                    Quisquam, quos.
-                  </p>
+                  </p> */}
                 </div>
               </div>
             </div>
@@ -443,7 +473,7 @@ export function SignUpAlertDialog({ showAlertDialog, setShowAlertDialog }) {
   );
 }
 
-function CommentList({ data,handleDeleteComment }) {
+function CommentList({ data, handleDeleteComment }) {
   return (
     <div className="container mx-auto my-8">
       {data.map((c, idx) => (
