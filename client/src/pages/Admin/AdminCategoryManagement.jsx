@@ -7,15 +7,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
-
 import AdminNavbar from "@/components/AdminNavbar";
 import AdminSidebar from "@/components/AdminSidebar";
 import { Search, Plus, Pencil, Trash2, X } from "lucide-react";
@@ -24,6 +15,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
+import Pagination from "../../components/Pagination";
 
 const AdminCategoryManagement = () => {
   const navigate = useNavigate();
@@ -37,6 +29,10 @@ const AdminCategoryManagement = () => {
 
   const apiUrl = import.meta.env.VITE_API_URL;
 
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
   useEffect(() => {
     const fetchPost = async () => {
       try {
@@ -45,19 +41,19 @@ const AdminCategoryManagement = () => {
         setCategories(responseCategories.data);
       } catch (error) {
         console.error("Error fetching categories data:", error);
-        // navigate("*");
       } finally {
         setIsLoading(false);
       }
     };
     fetchPost();
-  }, [navigate]);
+  }, [apiUrl]);
 
   useEffect(() => {
     const filtered = categories.filter((category) =>
       category.name.toLowerCase().includes(searchKeyword.toLowerCase())
     );
     setFilteredCategories(filtered);
+    setCurrentPage(1);
   }, [categories, searchKeyword]);
 
   const handleDelete = async (categoryId) => {
@@ -203,46 +199,12 @@ const AdminCategoryManagement = () => {
               </tbody>
             </table>
             {totalPages > 1 && (
-              <div className="flex justify-end p-4">
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious
-                        onClick={() =>
-                          setCurrentPage((p) => Math.max(1, p - 1))
-                        }
-                        className={`cursor-pointer ${
-                          currentPage === 1
-                            ? "pointer-events-none opacity-50"
-                            : "cursor-pointer"
-                        }`}
-                      />
-                    </PaginationItem>
-                    {Array.from({ length: totalPages }, (_, i) => (
-                      <PaginationItem key={i + 1}>
-                        <PaginationLink
-                          isActive={currentPage === i + 1}
-                          onClick={() => setCurrentPage(i + 1)}
-                          className="cursor-pointer"
-                        >
-                          {i + 1}
-                        </PaginationLink>
-                      </PaginationItem>
-                    ))}
-                    <PaginationItem>
-                      <PaginationNext
-                        onClick={() =>
-                          setCurrentPage((p) => Math.min(totalPages, p + 1))
-                        }
-                        className={`cursor-pointer ${
-                          currentPage === totalPages
-                            ? "pointer-events-none opacity-50"
-                            : "cursor-pointer"
-                        }`}
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
+              <div className="flex justify-center p-4">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                />
               </div>
             )}
           </div>

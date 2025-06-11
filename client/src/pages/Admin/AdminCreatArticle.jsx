@@ -73,12 +73,14 @@ const AdminCreatArticle = () => {
     setIsSaving(true);
     const formData = new FormData();
 
+
     formData.append("title", post.title);
     formData.append("category_id", post.category_id);
     formData.append("description", post.description);
     formData.append("content", post.content);
     formData.append("status_id", postStatusId);
     formData.append("imageFile", imageFile.file);
+    formData.append("user_id", state.user.id);
 
     console.log(formData.get("image"))
 
